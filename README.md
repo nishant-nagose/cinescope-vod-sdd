@@ -1,52 +1,92 @@
-# cinescope-vod-sdd
-**CineScope** is a medium-complexity frontend web application designed to provide users with a seamless movie browsing and discovery experience, similar to modern OTT platforms. The application integrates with external APIs (TMDB) to fetch real-time movie data and presents it through an intuitive user interface.
+# CineScope
 
-# Git Branching Workflow Extension
+A modern movie browsing application built with React 18, TypeScript, and Vite. Discover trending movies, explore top-rated content, search by title, and view detailed movie information.
 
-Git repository initialization, feature branch creation, numbering (sequential/timestamp), validation, remote detection, and auto-commit for Spec Kit.
+## Features
 
-## Overview
+- **Trending Movies**: Browse the latest trending movies from TMDB
+- **Top Rated**: Discover highly-rated movies sorted by popularity
+- **Search**: Find movies by title with real-time suggestions
+- **Movie Details**: Comprehensive movie information including cast, ratings, and related movies
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 
-This extension provides Git operations as an optional, self-contained module. It manages:
+## Tech Stack
 
-- **Repository initialization** with configurable commit messages
-- **Feature branch creation** with sequential (`001-feature-name`) or timestamp (`20260319-143022-feature-name`) numbering
-- **Branch validation** to ensure branches follow naming conventions
-- **Git remote detection** for GitHub integration (e.g., issue creation)
-- **Auto-commit** after core commands (configurable per-command with custom messages)
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **API**: The Movie Database (TMDB)
+- **Testing**: Vitest + React Testing Library
+- **Linting**: ESLint + Prettier
 
-## Commands
+## Getting Started
 
-| Command | Description |
-|---------|-------------|
-| `speckit.git.initialize` | Initialize a Git repository with a configurable commit message |
-| `speckit.git.feature` | Create a feature branch with sequential or timestamp numbering |
-| `speckit.git.validate` | Validate current branch follows feature branch naming conventions |
-| `speckit.git.remote` | Detect Git remote URL for GitHub integration |
-| `speckit.git.commit` | Auto-commit changes (configurable per-command enable/disable and messages) |
+### Prerequisites
 
-## Hooks
+- Node.js 18+
+- npm or yarn
 
-| Event | Command | Optional | Description |
-|-------|---------|----------|-------------|
-| `before_constitution` | `speckit.git.initialize` | No | Init git repo before constitution |
-| `before_specify` | `speckit.git.feature` | No | Create feature branch before specification |
-| `before_clarify` | `speckit.git.commit` | Yes | Commit outstanding changes before clarification |
-| `before_plan` | `speckit.git.commit` | Yes | Commit outstanding changes before planning |
-| `before_tasks` | `speckit.git.commit` | Yes | Commit outstanding changes before task generation |
-| `before_implement` | `speckit.git.commit` | Yes | Commit outstanding changes before implementation |
-| `before_checklist` | `speckit.git.commit` | Yes | Commit outstanding changes before checklist |
-| `before_analyze` | `speckit.git.commit` | Yes | Commit outstanding changes before analysis |
-| `before_taskstoissues` | `speckit.git.commit` | Yes | Commit outstanding changes before issue sync |
-| `after_constitution` | `speckit.git.commit` | Yes | Auto-commit after constitution update |
-| `after_specify` | `speckit.git.commit` | Yes | Auto-commit after specification |
-| `after_clarify` | `speckit.git.commit` | Yes | Auto-commit after clarification |
-| `after_plan` | `speckit.git.commit` | Yes | Auto-commit after planning |
-| `after_tasks` | `speckit.git.commit` | Yes | Auto-commit after task generation |
-| `after_implement` | `speckit.git.commit` | Yes | Auto-commit after implementation |
-| `after_checklist` | `speckit.git.commit` | Yes | Auto-commit after checklist |
-| `after_analyze` | `speckit.git.commit` | Yes | Auto-commit after analysis |
-| `after_taskstoissues` | `speckit.git.commit` | Yes | Auto-commit after issue sync |
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd cinescope
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Get your TMDB API key from [TMDB](https://www.themoviedb.org/settings/api) and add it to `.env`:
+   ```
+   VITE_TMDB_API_KEY=your_api_key_here
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run test` - Run tests
+- `npm run test:ui` - Run tests with UI
+- `npm run lint` - Run ESLint
+
+## Project Structure
+
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Page components
+├── services/      # API services and utilities
+├── hooks/         # Custom React hooks
+├── types/         # TypeScript type definitions
+├── styles/        # Global styles and Tailwind config
+└── tests/         # Test files
+```
+
+## Contributing
+
+1. Follow the established coding standards
+2. Write tests for new features
+3. Ensure all tests pass before submitting
+4. Update documentation as needed
+
+## License
+
+This project is licensed under the MIT License.
 
 ## Configuration
 
