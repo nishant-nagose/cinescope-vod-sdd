@@ -38,7 +38,7 @@ export function useApi<T>(
     // Check cache first
     if (cacheKey) {
       const cachedData = apiCache.get(cacheKey) as T | null
-      if (cachedData) {
+      if (cachedData !== null) {
         setState({ data: cachedData, loading: false, error: null })
         return
       }

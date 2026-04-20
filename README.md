@@ -45,7 +45,7 @@ A modern movie browsing application built with React 18, TypeScript, and Vite. D
    ```
    Get your TMDB API key from [TMDB](https://www.themoviedb.org/settings/api) and add it to `.env`:
    ```
-   VITE_TMDB_API_KEY=your_api_key_here
+   VITE_TMDB_API_KEY=2e1025cc7e5b7674b5c36f2205cc0e15
    ```
 
 4. Start the development server:

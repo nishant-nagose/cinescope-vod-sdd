@@ -198,7 +198,7 @@ Client-side caching only. No user data storage beyond session.
 ### A. TMDB API Key Setup
 1. Register at TheMovieDatabase.org
 2. Generate API Key from settings
-3. Add to `.env.local`: `VITE_TMDB_API_KEY=your_key_here`
+3. Add to `.env.local`: `VITE_TMDB_API_KEY=2e1025cc7e5b7674b5c36f2205cc0e15`
 
 ### B. Component Map
 ```

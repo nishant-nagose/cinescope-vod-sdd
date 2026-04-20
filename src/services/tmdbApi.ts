@@ -1,13 +1,17 @@
 /// <reference types="vite/client" />
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
-const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
+import type { Movie } from '../types/tmdb'
+
+const TMDB_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.themoviedb.org/3'
+const TMDB_IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p'
 
 export const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
 if (!TMDB_API_KEY) {
   throw new Error('VITE_TMDB_API_KEY is not defined')
 }
+
+export type { Movie }
 
 export const getImageUrl = (path: string | null, size: string = 'w500'): string | null => {
   if (!path) return null

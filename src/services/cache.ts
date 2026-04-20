@@ -7,7 +7,7 @@ interface CacheEntry<T> {
 class TTLCache<T> {
   private cache = new Map<string, CacheEntry<T>>()
 
-  constructor(private defaultTTL: number = 5 * 60 * 1000) {} // 5 minutes default
+  constructor(private defaultTTL: number = parseInt(import.meta.env.VITE_CACHE_TTL || '300000')) {} // Use env var or default to 5 minutes
 
   set(key: string, data: T, ttl?: number): void {
     this.cache.set(key, {
@@ -46,7 +46,9 @@ class TTLCache<T> {
 
 export const apiCache = new TTLCache()
 
-// Clean up cache periodically (optional)
-setInterval(() => {
-  apiCache.cleanup()
-}, 10 * 60 * 1000) // Every 10 minutes
+if (typeof window !== 'undefined') {
+  // Clean up cache periodically in browser environments only
+  setInterval(() => {
+    apiCache.cleanup()
+  }, 10 * 60 * 1000) // Every 10 minutes
+}
