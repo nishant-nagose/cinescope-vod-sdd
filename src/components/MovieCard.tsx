@@ -28,13 +28,13 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
             <span className="text-gray-400 text-sm">No Image</span>
           </div>
         )}
-        <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm font-medium">
+        <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-black bg-opacity-75 text-white px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs sm:text-sm font-medium">
           {movie.vote_average.toFixed(1)}
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-white mb-1 line-clamp-2">{movie.title}</h3>
-        <p className="text-gray-400 text-sm">{releaseYear}</p>
+      <div className="p-2 sm:p-3">
+        <h3 className="font-semibold text-white mb-1 line-clamp-2 text-xs sm:text-sm">{movie.title}</h3>
+        <p className="text-gray-400 text-xs sm:text-sm">{releaseYear}</p>
       </div>
     </Link>
   )
