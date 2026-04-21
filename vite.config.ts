@@ -7,8 +7,13 @@ export default ({ mode }) => {
 
   return defineConfig({
     plugins: [react()],
+    base: '/cinescope-vod-sdd/',
     server: {
       port: Number(env.VITE_PORT) || 5173,
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: false,
     },
   })
 }
