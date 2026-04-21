@@ -10,8 +10,8 @@ Follow-up TODOs: Replace placeholder names in Approval & Sign-Off when stakehold
 -->
 # CineScope - Movie Browsing Application - Constitution
 
-**Document Version:** 1.0  
-**Last Updated:** 2026-04-20  
+**Document Version:** 1.0.1
+**Last Updated:** 2026-04-21
 **Status:** APPROVED
 
 ## 1. Executive Summary
@@ -74,10 +74,11 @@ Users need a single platform to:
 - **Deployment**: Static hosting (Vercel, Netlify, GitHub Pages)
 
 ### Design Constraints
-- Responsive design (mobile-first approach)
+- Responsive design (mobile-first approach with breakpoints: mobile, sm, md, lg, xl)
 - Accessibility standards (WCAG 2.1 - Level AA)
 - Performance: Initial load < 3s, search results < 1s
 - No external payment integrations
+- GitHub Pages deployment via GitHub Actions CI/CD pipeline
 
 ## 5. Success Criteria
 
@@ -186,33 +187,133 @@ No custom backend. TMDB API is the sole external service.
 ### Data Persistence
 Client-side caching only. No user data storage beyond session.
 
+## 12a. Deployment Strategy
+
+### GitHub Pages Hosting
+- **Platform**: GitHub Pages (https://nishant-nagose.github.io/cinescope-vod-sdd/)
+- **Build Process**: Automated via GitHub Actions CI/CD pipeline
+- **Base Path**: `/cinescope-vod-sdd/` for production builds
+- **Build Command**: `npm run build` (TypeScript compilation + Vite bundling)
+- **Environment Variables**: VITE_TMDB_API_KEY managed via GitHub Secrets
+
+### CI/CD Pipeline
+**Workflow**: `.github/workflows/deploy.yaml`
+- **Trigger**: Automatic on push to main branch or manual via workflow_dispatch
+- **Steps**:
+  1. Checkout repository (Node.js: v18)
+  2. Install dependencies (`npm ci`)
+  3. Build application with environment variables
+  4. Upload artifacts to GitHub Pages
+  5. Deploy to GitHub Pages using official deploy-pages action
+- **Concurrency**: Prevents simultaneous deployments
+- **Output**: Production-ready static site
+
+### Configuration Files
+- **vite.config.ts**: Base path set to `/cinescope-vod-sdd/`
+- **src/App.tsx**: React Router basename configured for subdirectory routing
+- **.env**: VITE_TMDB_API_KEY loaded from GitHub Secrets during build
+
+## 12b. Responsive Design Implementation
+
+### Mobile-First Approach
+- **Default breakpoints**: Mobile → sm:640px → md:768px → lg:1024px → xl:1280px
+- **Design philosophy**: Start with mobile constraints, progressively enhance for larger screens
+
+### Component Responsiveness
+- **Header**: 
+  - Mobile: h-14 with hamburger menu, sticky positioning
+  - Desktop: h-16 with full navigation visible
+- **Navigation**: 
+  - Mobile: Hamburger menu with slide-down options
+  - Desktop (md+): Horizontal navigation bar
+- **Search bar**: Hidden on mobile/tablet, visible on lg+ screens
+- **Grid layouts**: 
+  - 2 columns (mobile) → 3 (sm) → 4 (md) → 5 (lg)
+  - Gap scaling: 3px (mobile) → 4px (sm) → 5px (md) → 6px (lg)
+- **Typography**: text-xs (mobile) → text-sm (tablet) → text-base (desktop)
+- **Footer**: 1 column (mobile) → 2 columns (sm) → 3 columns (lg)
+
+### Spacing Strategy
+- **Padding**: px-3 (mobile) → px-4 (sm) → px-6 (md) → px-8 (lg)
+- **Margins**: Adaptive spacing (py-4 sm:py-6 md:py-8)
+- **Touch targets**: Minimum 44px height for interactive elements
+
+### Performance Optimization
+- **Image lazy loading**: Implemented on all `img` elements
+- **CSS optimization**: Tailwind CSS purges unused styles in production
+- **Bundle analysis**: ~176KB gzipped (optimized for mobile)
+
+### Browser Support
+- Chrome/Edge (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Mobile browsers (iOS Safari, Chrome Android)
+
 ## 13. Approval & Sign-Off
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
-| Developer | [Your Name] | 2026-04-20 | ✓ |
-| Stakeholder/PM | [PM Name] | TBD | |
+| Developer | Nishant Nagose | 2026-04-21 | ✓ |
+| Deployment | GitHub Actions CI/CD | 2026-04-21 | ✓ |
 
-## Appendices
+## 14. Appendices
 
 ### A. TMDB API Key Setup
 1. Register at TheMovieDatabase.org
 2. Generate API Key from settings
-3. Add to `.env.local`: `VITE_TMDB_API_KEY=2e1025cc7e5b7674b5c36f2205cc0e15`
+3. Add to GitHub Secrets: `VITE_TMDB_API_KEY=[REDACTED_AZURE_OPENAI_API_KEY_1]`
+4. Configure in `.env.local` for local development
 
-### B. Component Map
+### B. SDD Organization
+The project follows Specification-Driven Development (SDD) principles with organized artifacts:
+- **constitution.md**: Project governance and decision framework
+- **specs/{feature}/spec.md**: Feature requirements and acceptance criteria
+- **specs/{feature}/plan.md**: Design and implementation approach
+- **specs/{feature}/task.md**: Actionable tasks and checkpoints
+- **src/**: Implementation files organized by components and pages
+- **.github/workflows/**: CI/CD configuration for automated deployment
+
+### C. Component Architecture (with Mobile Responsiveness)
 ```
-App/
-├── Layout/
-│   ├── Header
-│   ├── SearchBar
-│   └── Footer
-├── Pages/
-│   ├── TrendingPage
-│   ├── TopRatedPage
-│   ├── SearchResultsPage
-│   └── MovieDetailPage
-└── Services/
-    └── tmdbApi.ts
+App (React Router + basename: /cinescope-vod-sdd/)
+├── Layout (Responsive management)
+│   ├── Header (sticky, responsive h-14 sm:h-16)
+│   │   ├── Logo (responsive h-6 sm:h-8)
+│   │   ├── Desktop Nav (hidden md:flex)
+│   │   ├── Mobile Menu (hamburger, md:hidden)
+│   │   └── Search Bar (hidden lg:block)
+│   ├── Main Content (dynamic routes)
+│   │   ├── TrendingPage (grid: 2 sm:3 md:4 lg:5)
+│   │   ├── TopRatedPage (responsive grid)
+│   │   ├── SearchPage
+│   │   └── MovieDetailPage
+│   └── Footer (1 sm:2 lg:3 columns, responsive)
+└── Services (tmdbApi.ts - API layer)
 ```
+
+### D. Responsive Breakpoints Strategy
+| Breakpoint | Width | Components |
+|-----------|-------|-----------|
+| Mobile | <640px | Hamburger nav, single column |
+| sm | 640px+ | 2-3 column grids |
+| md | 768px+ | Desktop nav visible, 4 columns |
+| lg | 1024px+ | Full features, 5 columns, search bar |
+| xl | 1280px+ | Large screens, optimized spacing |
+
+### E. GitHub Pages & CI/CD Pipeline
+**Deployment URL**: https://nishant-nagose.github.io/cinescope-vod-sdd/
+- Automated builds on push to main via `.github/workflows/deploy.yaml`
+- Environment variable: `VITE_TMDB_API_KEY` via GitHub Secrets
+- Base path: `/cinescope-vod-sdd/` in all builds
+- React Router basename: `/cinescope-vod-sdd/` for correct routing
+
+### F. Development Workflow
+1. Create feature branch from main
+2. Write/update spec.md in feature directory
+3. Design & document in plan.md
+4. Break down into tasks in task.md
+5. Implement in src/
+6. Test and commit
+7. Push and create PR
+8. Merge to main → GitHub Actions deploys automatically
 
