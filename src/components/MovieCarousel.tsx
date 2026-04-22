@@ -9,6 +9,7 @@ interface MovieCarouselProps {
   loading?: boolean
   error?: string | null
   onRetry?: () => void
+  emptyMessage?: string
 }
 
 const CarouselSkeleton = () => (
@@ -37,6 +38,7 @@ export const MovieCarousel = ({
   loading,
   error,
   onRetry,
+  emptyMessage = 'No movies available for this section.',
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -82,7 +84,7 @@ export const MovieCarousel = ({
       {!loading && !error && movies.length === 0 && (
         <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-8 text-center">
           <p className="text-gray-400 text-sm sm:text-base">
-            No movies available for this section.
+            {emptyMessage}
           </p>
         </div>
       )}

@@ -1,14 +1,20 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useApi } from './useApi'
 import { getTopRatedMovies } from '../services/tmdbApi'
-import { TopRatedResponse } from '../types/tmdb'
+import { useContentFilter } from '../context/ContentFilterContext'
+import { DiscoverResponse } from '../types/tmdb'
 
 export const useTopRatedMovies = (initialPage: number = 1) => {
+  const { countries, languages, filterKey } = useContentFilter()
   const [currentPage, setCurrentPage] = useState(initialPage)
 
-  const { data, loading, error, refetch } = useApi<TopRatedResponse>(
-    () => getTopRatedMovies(currentPage),
-    { cacheKey: `top-rated-movies-${currentPage}` }
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterKey])
+
+  const { data, loading, error, refetch } = useApi<DiscoverResponse>(
+    () => getTopRatedMovies(currentPage, { countries, languages }),
+    { cacheKey: `top-rated-${currentPage}-${filterKey}` }
   )
 
   const loadPage = useCallback((page: number) => {

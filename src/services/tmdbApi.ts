@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { Movie, GenresResponse, DiscoverResponse } from '../types/tmdb'
+import type { Movie, GenresResponse, DiscoverResponse, TmdbCountry, TmdbLanguage, ContentFilterParams } from '../types/tmdb'
 
 const TMDB_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.themoviedb.org/3'
 const TMDB_IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p'
@@ -35,12 +35,46 @@ const apiRequest = async (endpoint: string, params: Record<string, string> = {})
   return response.json()
 }
 
-export const getTrendingMovies = async (page: number = 1) => {
-  return apiRequest('/trending/movie/week', { page: page.toString() })
+const buildFilterParams = (filter: ContentFilterParams): Record<string, string> => {
+  const params: Record<string, string> = {}
+  if (filter.countries.length > 0) {
+    params['with_origin_country'] = filter.countries.join('|')
+  }
+  if (filter.languages.length > 0) {
+    params['with_original_language'] = filter.languages.join('|')
+  }
+  return params
 }
 
-export const getTopRatedMovies = async (page: number = 1) => {
-  return apiRequest('/movie/top_rated', { page: page.toString() })
+export const getCountries = async (): Promise<TmdbCountry[]> => {
+  return apiRequest('/configuration/countries')
+}
+
+export const getLanguages = async (): Promise<TmdbLanguage[]> => {
+  return apiRequest('/configuration/languages')
+}
+
+export const getTrendingMovies = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
+  return apiRequest('/discover/movie', {
+    sort_by: 'popularity.desc',
+    page: page.toString(),
+    ...(filter ? buildFilterParams(filter) : {}),
+  })
+}
+
+export const getTopRatedMovies = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
+  return apiRequest('/discover/movie', {
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '200',
+    page: page.toString(),
+    ...(filter ? buildFilterParams(filter) : {}),
+  })
 }
 
 export const searchMovies = async (query: string, page: number = 1) => {
@@ -66,26 +100,39 @@ export const getGenres = async (): Promise<GenresResponse> => {
   return apiRequest('/genre/movie/list')
 }
 
-export const getMoviesByGenre = async (genreId: number, page: number = 1): Promise<DiscoverResponse> => {
+export const getMoviesByGenre = async (
+  genreId: number,
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
   return apiRequest('/discover/movie', {
     with_genres: genreId.toString(),
     sort_by: 'popularity.desc',
     page: page.toString(),
+    ...(filter ? buildFilterParams(filter) : {}),
   })
 }
 
-export const getNewReleases = async (page: number = 1): Promise<DiscoverResponse> => {
+export const getNewReleases = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
   return apiRequest('/discover/movie', {
     sort_by: 'release_date.desc',
     'vote_count.gte': '50',
     page: page.toString(),
+    ...(filter ? buildFilterParams(filter) : {}),
   })
 }
 
-export const getCriticallyAcclaimed = async (page: number = 1): Promise<DiscoverResponse> => {
+export const getCriticallyAcclaimed = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
   return apiRequest('/discover/movie', {
     sort_by: 'vote_average.desc',
     'vote_count.gte': '300',
     page: page.toString(),
+    ...(filter ? buildFilterParams(filter) : {}),
   })
 }

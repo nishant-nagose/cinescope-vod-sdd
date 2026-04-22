@@ -41,6 +41,7 @@ export const HomePage = () => {
         loading={trending.loading}
         error={trending.error}
         onRetry={trending.refetch}
+        emptyMessage="No movies found for the selected filters."
       />
 
       <MovieCarousel
@@ -49,6 +50,7 @@ export const HomePage = () => {
         loading={topRated.loading}
         error={topRated.error}
         onRetry={topRated.refetch}
+        emptyMessage="No movies found for the selected filters."
       />
 
       <MovieCarousel
@@ -66,6 +68,7 @@ export const HomePage = () => {
         loading={byGenre.loading || genres.loading}
         error={byGenre.error}
         onRetry={byGenre.refetch}
+        emptyMessage="No movies found for the selected filters."
       />
 
       <MovieCarousel
@@ -74,6 +77,7 @@ export const HomePage = () => {
         loading={newReleases.loading}
         error={newReleases.error}
         onRetry={newReleases.refetch}
+        emptyMessage="No movies found for the selected filters."
       />
 
       <MovieCarousel
@@ -82,6 +86,7 @@ export const HomePage = () => {
         loading={acclaimed.loading}
         error={acclaimed.error}
         onRetry={acclaimed.refetch}
+        emptyMessage="No movies found for the selected filters."
       />
 
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 mt-4 text-center space-x-4">

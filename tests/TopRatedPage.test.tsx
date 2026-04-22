@@ -4,6 +4,15 @@ import { TopRatedPage } from '../src/pages/TopRatedPage'
 import { useTopRatedMovies } from '../src/hooks/useTopRatedMovies'
 
 vi.mock('../src/hooks/useTopRatedMovies')
+vi.mock('../src/context/ContentFilterContext', () => ({
+  useContentFilter: () => ({
+    countries: ['US'],
+    languages: ['en'],
+    filterKey: 'US-en',
+    setCountries: vi.fn(),
+    setLanguages: vi.fn(),
+  }),
+}))
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>

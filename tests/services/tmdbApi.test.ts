@@ -11,6 +11,8 @@ import {
   getMovieDetails,
   getMovieCredits,
   getSimilarMovies,
+  getCountries,
+  getLanguages,
 } from '../../src/services/tmdbApi'
 
 const mockResponse = (data: unknown, ok = true, status = 200) =>
@@ -41,13 +43,14 @@ describe('getTrendingMovies', () => {
   beforeEach(() => vi.clearAllMocks())
   afterEach(() => vi.clearAllMocks())
 
-  test('calls trending endpoint with page param', async () => {
+  test('calls /discover/movie with sort_by=popularity.desc', async () => {
     const mockData = { results: [], page: 1, total_pages: 1, total_results: 0 }
     mockFetch.mockReturnValueOnce(mockResponse(mockData))
     const data = await getTrendingMovies(1)
     expect(mockFetch).toHaveBeenCalledTimes(1)
     const url: string = mockFetch.mock.calls[0][0]
-    expect(url).toContain('/trending/movie/week')
+    expect(url).toContain('/discover/movie')
+    expect(url).toContain('sort_by=popularity.desc')
     expect(url).toContain('page=1')
     expect(data).toEqual(mockData)
   })
@@ -59,6 +62,28 @@ describe('getTrendingMovies', () => {
     expect(url).toContain('page=1')
   })
 
+  test('appends with_origin_country when filter has countries', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [] }))
+    await getTrendingMovies(1, { countries: ['US', 'FR'], languages: [] })
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('with_origin_country=US%7CFR')
+  })
+
+  test('appends with_original_language when filter has languages', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [] }))
+    await getTrendingMovies(1, { countries: [], languages: ['en', 'fr'] })
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('with_original_language=en%7Cfr')
+  })
+
+  test('omits filter params when arrays are empty', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [] }))
+    await getTrendingMovies(1, { countries: [], languages: [] })
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).not.toContain('with_origin_country')
+    expect(url).not.toContain('with_original_language')
+  })
+
   test('throws on non-ok response', async () => {
     mockFetch.mockReturnValueOnce(mockResponse({}, false, 401))
     await expect(getTrendingMovies()).rejects.toThrow('TMDB API error')
@@ -68,12 +93,46 @@ describe('getTrendingMovies', () => {
 describe('getTopRatedMovies', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  test('calls top_rated endpoint', async () => {
+  test('calls /discover/movie with sort_by=vote_average.desc', async () => {
     mockFetch.mockReturnValueOnce(mockResponse({ results: [] }))
     await getTopRatedMovies(2)
     const url: string = mockFetch.mock.calls[0][0]
-    expect(url).toContain('/movie/top_rated')
+    expect(url).toContain('/discover/movie')
+    expect(url).toContain('sort_by=vote_average.desc')
     expect(url).toContain('page=2')
+  })
+
+  test('includes vote_count.gte=200 threshold', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [] }))
+    await getTopRatedMovies()
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('vote_count.gte=200')
+  })
+})
+
+describe('getCountries', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /configuration/countries', async () => {
+    const mockData = [{ iso_3166_1: 'US', english_name: 'United States', native_name: 'United States' }]
+    mockFetch.mockReturnValueOnce(mockResponse(mockData))
+    const data = await getCountries()
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/configuration/countries')
+    expect(data).toEqual(mockData)
+  })
+})
+
+describe('getLanguages', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /configuration/languages', async () => {
+    const mockData = [{ iso_639_1: 'en', english_name: 'English', name: 'English' }]
+    mockFetch.mockReturnValueOnce(mockResponse(mockData))
+    const data = await getLanguages()
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/configuration/languages')
+    expect(data).toEqual(mockData)
   })
 })
 

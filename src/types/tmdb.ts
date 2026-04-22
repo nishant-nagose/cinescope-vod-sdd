@@ -127,3 +127,20 @@ export interface DiscoverResponse {
   total_pages: number
   total_results: number
 }
+
+export interface TmdbCountry {
+  iso_3166_1: string
+  english_name: string
+  native_name: string
+}
+
+export interface TmdbLanguage {
+  iso_639_1: string
+  english_name: string
+  name: string
+}
+
+export interface ContentFilterParams {
+  countries: string[]
+  languages: string[]
+}
