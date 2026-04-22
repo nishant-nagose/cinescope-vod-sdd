@@ -95,7 +95,7 @@ export const MovieDetailPage = () => {
 
             <div className="flex flex-wrap items-center gap-3 mb-3 text-sm text-gray-400">
               {movie.release_date && <span>{movie.release_date.slice(0, 4)}</span>}
-              {movie.runtime > 0 && <span>{formatRuntime(movie.runtime)}</span>}
+              {movie.runtime != null && movie.runtime > 0 && <span>{formatRuntime(movie.runtime)}</span>}
               {movie.vote_average > 0 && (
                 <div className="flex items-center gap-2">
                   <RatingBadge rating={movie.vote_average} />
