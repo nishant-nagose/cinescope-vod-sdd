@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMovieSearch } from '../hooks/useMovieSearch'
+import { useContentFilter } from '../context/ContentFilterContext'
 import { MovieGrid } from '../components/MovieGrid'
 import { PaginationControls } from '../components/PaginationControls'
 import { SearchBar } from '../components/SearchBar'
@@ -24,9 +25,14 @@ const sortMovies = (movies: Movie[], sort: SortOption): Movie[] => {
 export const SearchPage = () => {
   const { results, loading, error, query, page, totalPages, setQuery, setPage } =
     useMovieSearch()
+  const { languages } = useContentFilter()
   const [sortBy, setSortBy] = useState<SortOption>('relevance')
 
-  const sortedResults = sortMovies(results, sortBy)
+  const languageFilteredResults = languages.length > 0
+    ? results.filter(m => languages.includes(m.original_language))
+    : results
+
+  const sortedResults = sortMovies(languageFilteredResults, sortBy)
 
   const renderContent = () => {
     if (!query) {
@@ -43,7 +49,7 @@ export const SearchPage = () => {
         </p>
       )
     }
-    if (!loading && !error && results.length === 0) {
+    if (!loading && !error && languageFilteredResults.length === 0) {
       return (
         <p className="text-gray-400 text-center py-12 text-sm sm:text-base">
           No movies found for &ldquo;{query}&rdquo;.

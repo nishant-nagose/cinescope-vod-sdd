@@ -1,10 +1,12 @@
 import { useApi } from './useApi'
 import { getTrendingMovies } from '../services/tmdbApi'
-import { TrendingResponse } from '../types/tmdb'
+import { useContentFilter } from '../context/ContentFilterContext'
+import { DiscoverResponse } from '../types/tmdb'
 
 export const useTrendingMovies = () => {
-  return useApi<TrendingResponse>(
-    () => getTrendingMovies(),
-    { cacheKey: 'trending-movies' }
+  const { countries, languages, filterKey } = useContentFilter()
+  return useApi<DiscoverResponse>(
+    () => getTrendingMovies(1, { countries, languages }),
+    { cacheKey: `trending-${filterKey}` }
   )
 }

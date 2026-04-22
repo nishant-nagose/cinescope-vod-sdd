@@ -4,6 +4,15 @@ import { SearchPage } from '../../src/pages/SearchPage'
 import { useMovieSearch } from '../../src/hooks/useMovieSearch'
 
 vi.mock('../../src/hooks/useMovieSearch')
+vi.mock('../../src/context/ContentFilterContext', () => ({
+  useContentFilter: () => ({
+    countries: ['US'],
+    languages: ['en'],
+    filterKey: 'US-en',
+    setCountries: vi.fn(),
+    setLanguages: vi.fn(),
+  }),
+}))
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>

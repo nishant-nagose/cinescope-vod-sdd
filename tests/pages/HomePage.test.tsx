@@ -14,6 +14,15 @@ vi.mock('../../src/hooks/useGenres')
 vi.mock('../../src/hooks/useMoviesByGenre')
 vi.mock('../../src/hooks/useNewReleases')
 vi.mock('../../src/hooks/useCriticallyAcclaimed')
+vi.mock('../../src/context/ContentFilterContext', () => ({
+  useContentFilter: () => ({
+    countries: ['US'],
+    languages: ['en'],
+    filterKey: 'US-en',
+    setCountries: vi.fn(),
+    setLanguages: vi.fn(),
+  }),
+}))
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>

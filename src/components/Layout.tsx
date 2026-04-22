@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
 import cinescopeLogo from '../images/cinescope-logo-black.png'
 import { SearchBar } from './SearchBar'
+import { ContentFilterBar } from './ContentFilterBar'
 
 interface LayoutProps {
   children: ReactNode
@@ -74,6 +75,10 @@ export const Layout = ({ children }: LayoutProps) => {
               </Link>
             </nav>
           )}
+        </div>
+
+        <div className="border-t border-gray-700 px-3 sm:px-4 md:px-6 lg:px-8">
+          <ContentFilterBar />
         </div>
       </header>
 
