@@ -1,6 +1,6 @@
 # Implementation Plan: Movie Detail Page
 
-**Branch**: `004-movie-detail-page` | **Date**: 2026-04-21 | **Spec**: [./spec.md](./spec.md) | **Status**: PLANNED
+**Branch**: `004-movie-detail-page` | **Date**: 2026-04-21 | **Spec**: [./spec.md](./spec.md) | **Status**: COMPLETED
 **Input**: Feature specification from `/specs/004-movie-detail-page/spec.md`
 
 ## Summary
