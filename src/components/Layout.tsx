@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
 import cinescopeLogo from '../images/cinescope-logo-black.png'
+import { SearchBar } from './SearchBar'
 
 interface LayoutProps {
   children: ReactNode
@@ -33,13 +34,8 @@ export const Layout = ({ children }: LayoutProps) => {
               </Link>
             </nav>
 
-            <div className="hidden lg:block">
-              <input
-                type="text"
-                placeholder="Search movies..."
-                className="px-3 py-2 bg-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled
-              />
+            <div className="hidden lg:block w-56 xl:w-72">
+              <SearchBar placeholder="Search movies..." className="w-full" />
             </div>
 
             <button
