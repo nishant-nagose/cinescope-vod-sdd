@@ -46,14 +46,16 @@ As a movie enthusiast, I want to access a dedicated page showing all trending mo
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
-- **SC-001**: Users see at least 10 trending movies on first view.
+- **SC-001**: Users see at least 20 trending movies on first view (load-more fetches additional batches).
 - **SC-002**: Page renders a visible loading state while data is fetching.
 - **SC-003**: Error state offers retry and explains the failure.
 - **SC-004**: Responsive layout adapts to 2 columns on mobile, 3 on tablet, and 4+ on desktop.
 - **SC-005**: Navigation from a movie card to detail view succeeds in one click.
+- **SC-006**: Load-more button appears when more content available; hidden at end.
+- **SC-007**: Page accessible at route `/trending`.
 
 ## Assumptions
 
-- Trending movie data is available from the external movie API.
-- A default language of English is acceptable for this feature.
-- Users expect the homepage to highlight popular content first.
+- Trending movie data is available from TMDB API.
+- A default language of English is acceptable.
+- Dedicated page complements home page carousel with comprehensive trending browsing.
