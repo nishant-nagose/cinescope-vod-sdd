@@ -23,7 +23,7 @@ export const Layout = ({ children }: LayoutProps) => {
               />
             </Link>
             <nav className="hidden md:flex space-x-6 lg:space-x-8">
-              <Link to="/" className="text-sm lg:text-base hover:text-blue-400 transition-colors">
+              <Link to="/trending" className="text-sm lg:text-base hover:text-blue-400 transition-colors">
                 Trending
               </Link>
               <Link to="/top-rated" className="text-sm lg:text-base hover:text-blue-400 transition-colors">
@@ -52,7 +52,7 @@ export const Layout = ({ children }: LayoutProps) => {
           {mobileMenuOpen && (
             <nav className="md:hidden border-t border-gray-700 py-3 space-y-2">
               <Link
-                to="/"
+                to="/trending"
                 className="block px-4 py-2 hover:bg-gray-700 rounded-md transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -97,7 +97,7 @@ export const Layout = ({ children }: LayoutProps) => {
             <div>
               <h4 className="text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">Popular</h4>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
-                <li><Link to="/" className="hover:text-blue-400 transition-colors">Trending</Link></li>
+                <li><Link to="/trending" className="hover:text-blue-400 transition-colors">Trending</Link></li>
                 <li><Link to="/top-rated" className="hover:text-blue-400 transition-colors">Top Rated</Link></li>
                 <li><Link to="/search" className="hover:text-blue-400 transition-colors">Search</Link></li>
               </ul>

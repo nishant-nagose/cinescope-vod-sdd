@@ -116,3 +116,14 @@ export interface SimilarMoviesResponse {
   total_pages: number
   total_results: number
 }
+
+export interface GenresResponse {
+  genres: Genre[]
+}
+
+export interface DiscoverResponse {
+  page: number
+  results: Movie[]
+  total_pages: number
+  total_results: number
+}
