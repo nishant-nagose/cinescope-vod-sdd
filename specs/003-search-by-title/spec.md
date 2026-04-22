@@ -2,7 +2,7 @@
 
 **Feature Branch**: `003-search-by-title`
 **Created**: 2026-04-20
-**Status**: APPROVED
+**Status**: COMPLETED
 **Input**: User description: "Search by Title feature for CineScope"
 
 ## User Scenarios & Testing *(mandatory)*
