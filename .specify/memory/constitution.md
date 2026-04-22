@@ -58,25 +58,36 @@ Users need a single platform to:
 
 ## 4. Core Principles & Constraints
 
-### SDD Principles Applied
-1. **Specification-First Development**: All features are spec'd before implementation.
-2. **Clear Separation of Concerns**: Separate UI, API integration, and state management.
-3. **Type Safety**: Use TypeScript for runtime safety where applicable.
-4. **Component-Driven Architecture**: Build modular, reusable components.
-5. **API Contract First**: TMDB API contracts define data models.
+### I. Specification-First Development
+All features begin with an approved `spec.md` before any implementation. No code is written without a specification. `plan.md` and `task.md` must exist before implementation starts. Spec quality is validated via `checklists/requirements.md` before planning proceeds.
+
+### II. Type Safety
+TypeScript strict mode is enforced across all source files. No `any` types in production code. All TMDB API responses have typed interfaces defined in `src/types/`. Runtime safety is the responsibility of the type system, not defensive checks.
+
+### III. Component-Driven Architecture
+UI is built from small, reusable components in `src/components/`. Pages in `src/pages/` compose components — they do not duplicate UI logic. Each component has a single, clear responsibility. State lives in custom hooks in `src/hooks/`, not in components.
+
+### IV. API Contract First
+TMDB API endpoints and response shapes are defined in specs before implementation. The service layer (`src/services/tmdbApi.ts`) is the sole gateway to external data. No direct API calls from components or pages. Caching and error handling are centralised in the service layer.
+
+### V. Mobile-First Responsive Design
+All UI is designed for mobile first, then progressively enhanced for larger screens using Tailwind CSS breakpoints: `sm:640px`, `md:768px`, `lg:1024px`, `xl:1280px`. Touch targets minimum 44×44px. No horizontal scrolling permitted. Lighthouse mobile score must exceed 85.
+
+### VI. Automated Deployment
+All production releases go through GitHub Actions CI/CD (`.github/workflows/deploy.yaml`). No manual deployments. The `main` branch is always deployable. Environment secrets are managed exclusively via GitHub Secrets — never committed to source code.
 
 ### Technical Constraints
-- **Language**: JavaScript/TypeScript
-- **Framework**: React 18+ with modern patterns
+- **Language**: TypeScript 5.0 / JavaScript
+- **Framework**: React 18+ with functional components and hooks
 - **API**: TMDB Free API (no additional backend required)
-- **Storage**: LocalStorage for client-side caching only
+- **Storage**: Client-side TTL cache (in-memory, 5-min TTL) — no localStorage persistence
 - **No Authentication**: Public/unauthenticated access
-- **Deployment**: Static hosting (Vercel, Netlify, GitHub Pages)
+- **Deployment**: GitHub Pages via GitHub Actions CI/CD
 
 ### Design Constraints
 - Responsive design (mobile-first approach with breakpoints: mobile, sm, md, lg, xl)
 - Accessibility standards (WCAG 2.1 - Level AA)
-- Performance: Initial load < 3s, search results < 1s
+- Performance: Initial load < 3s, search results < 1s, bundle < 200KB gzipped
 - No external payment integrations
 - GitHub Pages deployment via GitHub Actions CI/CD pipeline
 
@@ -249,7 +260,37 @@ Client-side caching only. No user data storage beyond session.
 - Safari (latest 2 versions)
 - Mobile browsers (iOS Safari, Chrome Android)
 
-## 13. Approval & Sign-Off
+## 13. Governance
+
+This constitution supersedes all other development practices for CineScope. All feature work must comply with the Core Principles defined in Section 4.
+
+### Compliance Requirements
+- All specs must pass the `checklists/requirements.md` quality gate before planning proceeds
+- All `plan.md` files must include a Constitution Check section with all six principles verified
+- All PRs must be traceable to a spec — no unspecified features merged to `main`
+- Complexity violations (e.g. skipping a principle) must be justified in `plan.md` Complexity Tracking section
+
+### Amendment Process
+1. Proposed amendments must be documented with clear rationale
+2. Amendment must reference which principle or section is affected
+3. Developer sign-off required before the amendment takes effect
+4. All dependent spec-kit templates (`spec-template.md`, `plan-template.md`, `tasks-template.md`) must be reviewed after any amendment
+
+### SDD Workflow Order
+Features MUST follow this sequence — no skipping steps:
+1. `/speckit-specify` → produces `spec.md`
+2. `/speckit-clarify` → refines `spec.md`
+3. `/speckit-checklist` → validates `checklists/requirements.md`
+4. `/speckit-plan` → produces `plan.md`
+5. `/speckit-tasks` → produces `task.md`
+6. `/speckit-implement` → executes tasks
+7. `/speckit-analyze` → cross-artifact consistency check
+
+**Version**: 1.0.1 | **Ratified**: 2026-04-21 | **Last Amended**: 2026-04-22
+
+---
+
+## 14. Approval & Sign-Off
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|

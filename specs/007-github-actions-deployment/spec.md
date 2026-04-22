@@ -2,7 +2,7 @@
 
 **Feature Branch**: `007-github-actions-deployment`
 **Created**: 2026-04-21
-**Status**: APPROVED
+**Status**: COMPLETED
 **Input**: Deployment automation for CineScope to GitHub Pages
 
 ## User Scenarios & Testing *(mandatory)*
@@ -30,22 +30,28 @@ As a security-minded developer, I want API keys to be managed securely via GitHu
 2. **Given** the application builds, **When** the build completes, **Then** no secrets appear in logs or version history.
 3. **Given** a new team member joins, **When** they clone the repository, **Then** they cannot access the production API key.
 
+### Edge Cases
+- **Large build**: If build takes >5 minutes, it completes but is marked as slow.
+- **API rate limiting**: Workflow retry logic ensures resilience.
+- **Network failures**: GitHub Actions retries failed steps automatically.
+- **Secret rotation**: Secrets can be updated; next deployment uses new values.
+
 ---
 
-## Functional Requirements
+## Requirements *(mandatory)*
 
-- The GitHub Actions workflow must trigger automatically on push to main branch.
-- The workflow must compile TypeScript, bundle with Vite, and produce dist artifacts.
-- Environment variables (VITE_TMDB_API_KEY) must be injected during build from GitHub Secrets.
-- The build must be optimized for production (minification, CSS purging).
-- Artifacts must be deployed to GitHub Pages automatically.
-- The site must be accessible at: https://nishant-nagose.github.io/cinescope-vod-sdd/
-- The base path /cinescope-vod-sdd/ must be configured in Vite and React Router.
-- Manual workflow dispatch must be available for triggering deployments.
-- Concurrent deployments must be prevented.
+### Functional Requirements
+- **FR-001**: The GitHub Actions workflow MUST trigger automatically on push to main branch.
+- **FR-002**: The workflow MUST compile TypeScript, bundle with Vite, and produce dist artifacts.
+- **FR-003**: Environment variables (VITE_TMDB_API_KEY) MUST be injected during build from GitHub Secrets.
+- **FR-004**: The build MUST be optimized for production (minification, CSS purging).
+- **FR-005**: Artifacts MUST be deployed to GitHub Pages automatically.
+- **FR-006**: The site MUST be accessible at: https://nishant-nagose.github.io/cinescope-vod-sdd/
+- **FR-007**: The base path /cinescope-vod-sdd/ MUST be configured in Vite and React Router.
+- **FR-008**: Manual workflow dispatch MUST be available for triggering deployments.
+- **FR-009**: Concurrent deployments MUST be prevented.
 
-## Technical Requirements
-
+### Technical Requirements
 - **GitHub Actions**: `.github/workflows/deploy.yaml`
 - **Node.js**: version 18 LTS
 - **Dependencies**: npm, Vite, TypeScript, React Router
@@ -53,18 +59,22 @@ As a security-minded developer, I want API keys to be managed securely via GitHu
 - **Output**: `dist/` directory with static files
 - **Pages Deployment**: Official `actions/deploy-pages@v4`
 
-## Success Criteria
+### Key Entities
+- **Workflow**: GitHub Actions YAML config
+- **Artifact**: Built dist/ directory
+- **Secret**: VITE_TMDB_API_KEY environment variable
 
-| Criterion | Target | Validation |
-|-----------|--------|-----------|
-| Automatic deployment | On every main push | Check Actions tab |
-| Build success | 100% builds work | No build failures |
-| Environment injection | API key available | Logged in app startup |
-| GitHub Pages hosting | Site accessible | Access via GitHub Pages URL |
-| Base path configuration | `/cinescope-vod-sdd/` | Navigate site successfully |
-| Deployment time | <5 minutes | Measure from push to live |
-| Security | No secrets exposed | Audit logs |
-| Manual trigger | workflow_dispatch works | All deployments succeed |
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+- **SC-001**: Automatic deployment triggers on every main push (validated via Actions tab).
+- **SC-002**: Build success rate is 100% with no build failures.
+- **SC-003**: Environment injection makes API key available during build (logged at app startup).
+- **SC-004**: GitHub Pages hosting makes the site accessible at the GitHub Pages URL.
+- **SC-005**: Base path `/cinescope-vod-sdd/` is configured and all site navigation works correctly.
+- **SC-006**: Deployment time is under 5 minutes measured from push to live.
+- **SC-007**: Security audit confirms no secrets are exposed in logs or version history.
+- **SC-008**: Manual trigger via workflow_dispatch succeeds for all deployments.
 
 ## Assumptions
 
@@ -73,13 +83,6 @@ As a security-minded developer, I want API keys to be managed securely via GitHu
 - Team members have permission to manage Secrets.
 - All deployments should target main branch.
 - Production builds are the source of truth.
-
-## Edge Cases
-
-- **Large build**: If build takes >5 minutes, it completes but is marked as slow.
-- **API rate limiting**: Workflow retry logic ensures resilience.
-- **Network failures**: GitHub Actions retries failed steps automatically.
-- **Secret rotation**: Secrets can be updated; next deployment uses new values.
 
 ## Out of Scope
 
