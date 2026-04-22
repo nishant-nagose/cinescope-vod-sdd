@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { Movie } from '../types/tmdb'
+import type { Movie, GenresResponse, DiscoverResponse } from '../types/tmdb'
 
 const TMDB_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.themoviedb.org/3'
 const TMDB_IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p'
@@ -60,4 +60,32 @@ export const getMovieCredits = async (id: number) => {
 
 export const getSimilarMovies = async (id: number, page: number = 1) => {
   return apiRequest(`/movie/${id}/similar`, { page: page.toString() })
+}
+
+export const getGenres = async (): Promise<GenresResponse> => {
+  return apiRequest('/genre/movie/list')
+}
+
+export const getMoviesByGenre = async (genreId: number, page: number = 1): Promise<DiscoverResponse> => {
+  return apiRequest('/discover/movie', {
+    with_genres: genreId.toString(),
+    sort_by: 'popularity.desc',
+    page: page.toString(),
+  })
+}
+
+export const getNewReleases = async (page: number = 1): Promise<DiscoverResponse> => {
+  return apiRequest('/discover/movie', {
+    sort_by: 'release_date.desc',
+    'vote_count.gte': '50',
+    page: page.toString(),
+  })
+}
+
+export const getCriticallyAcclaimed = async (page: number = 1): Promise<DiscoverResponse> => {
+  return apiRequest('/discover/movie', {
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '300',
+    page: page.toString(),
+  })
 }

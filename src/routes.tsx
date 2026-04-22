@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { HomePage } from './pages/HomePage'
 import { TrendingPage } from './pages/TrendingPage'
 import { TopRatedPage } from './pages/TopRatedPage'
 import { SearchPage } from './pages/SearchPage'
@@ -11,7 +12,8 @@ export const AppRoutes = () => {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<TrendingPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/trending" element={<TrendingPage />} />
         <Route path="/top-rated" element={<TopRatedPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/movie/:id" element={<MovieDetailPage />} />
