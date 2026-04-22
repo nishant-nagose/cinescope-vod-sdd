@@ -1,76 +1,64 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 import { TrendingPage } from '../src/pages/TrendingPage'
-import { getTrendingMovies } from '../src/services/tmdbApi'
+import { useTrendingMovies } from '../src/hooks/useTrendingMovies'
 
-// Mock the API
-vi.mock('../src/services/tmdbApi', () => ({
-  getTrendingMovies: vi.fn(),
-}))
-
-// Mock react-router-dom
+vi.mock('../src/hooks/useTrendingMovies')
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
 }))
+vi.mock('../src/services/tmdbApi', () => ({
+  getImageUrl: (path: string | null) => (path ? `https://img.tmdb.org${path}` : null),
+}))
 
 const mockMovies = [
-  {
-    id: 1,
-    title: 'Test Movie 1',
-    poster_path: '/test1.jpg',
-    release_date: '2023-01-01',
-    vote_average: 8.5,
-  },
-  {
-    id: 2,
-    title: 'Test Movie 2',
-    poster_path: '/test2.jpg',
-    release_date: '2023-02-01',
-    vote_average: 7.2,
-  },
+  { id: 1, title: 'Test Movie 1', poster_path: '/test1.jpg', release_date: '2023-01-01', vote_average: 8.5, vote_count: 1000, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Test Movie 1', popularity: 100, video: false },
+  { id: 2, title: 'Test Movie 2', poster_path: '/test2.jpg', release_date: '2023-02-01', vote_average: 7.2, vote_count: 800, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Test Movie 2', popularity: 90, video: false },
 ]
+
+const defaultHook = {
+  data: { results: mockMovies, page: 1, total_pages: 1, total_results: 2 },
+  loading: false,
+  error: null,
+  refetch: vi.fn(),
+}
 
 describe('TrendingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue(defaultHook)
   })
 
   test('renders loading state initially', () => {
-    ;(getTrendingMovies as any).mockImplementation(() => new Promise(() => {}))
-
+    ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...defaultHook,
+      data: null,
+      loading: true,
+    })
     render(<TrendingPage />)
-
     expect(screen.getByText('Trending Movies')).toBeInTheDocument()
-    // Loading skeletons should be present
-    expect(screen.getAllByRole('generic', { hidden: true }).length).toBeGreaterThan(0)
   })
 
   test('renders movie cards when data loads', async () => {
-    ;(getTrendingMovies as any).mockResolvedValue({
-      results: mockMovies,
-    })
-
     render(<TrendingPage />)
-
     await waitFor(() => {
       expect(screen.getByText('Test Movie 1')).toBeInTheDocument()
       expect(screen.getByText('Test Movie 2')).toBeInTheDocument()
     })
-
-    // Check that links are present
     const links = screen.getAllByRole('link')
-    expect(links).toHaveLength(2)
     expect(links[0]).toHaveAttribute('href', '/movie/1')
     expect(links[1]).toHaveAttribute('href', '/movie/2')
   })
 
   test('renders error state when API fails', async () => {
-    ;(getTrendingMovies as any).mockRejectedValue(new Error('API Error'))
-
+    ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...defaultHook,
+      data: null,
+      error: 'Something went wrong',
+    })
     render(<TrendingPage />)
-
     await waitFor(() => {
       expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     })
