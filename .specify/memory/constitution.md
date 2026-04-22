@@ -33,17 +33,25 @@ Users need a single platform to:
 ## 3. Project Scope
 
 ### In Scope ✓
-- Movie browsing and discovery interface
-- Integration with TMDB API for movie data
-- Trending movies page
-- Top-rated movies page
+- Modern VOD home page with:
+  - Top and Latest Movies (horizontal scrolling)
+  - Top 10 Movies Today (horizontal scrolling)
+  - Movie categories with dropdown filtering (Romantic, Thriller, Action, etc.)
+  - New on CineScope section (horizontal scrolling)
+  - Critically Acclaimed Movies (horizontal scrolling)
+  - 2-row horizontal scroll layout with 20 movies per section
+- Dedicated Trending Movies page
+- Dedicated Top Rated Movies page
 - Search functionality by movie title
 - Movie detail page with:
+  - Large poster/backdrop image
   - Overview/synopsis
   - Cast information
   - Ratings and metadata
-- Responsive UI design (desktop, tablet, mobile)
+  - Related/recommended movies
+- Premium responsive UI design (desktop, tablet, mobile)
 - Client-side caching and error handling
+- Horizontal scrolling components with responsive behavior
 
 ### Out of Scope ✗
 - Video streaming functionality
@@ -70,8 +78,11 @@ UI is built from small, reusable components in `src/components/`. Pages in `src/
 ### IV. API Contract First
 TMDB API endpoints and response shapes are defined in specs before implementation. The service layer (`src/services/tmdbApi.ts`) is the sole gateway to external data. No direct API calls from components or pages. Caching and error handling are centralised in the service layer.
 
-### V. Mobile-First Responsive Design
-All UI is designed for mobile first, then progressively enhanced for larger screens using Tailwind CSS breakpoints: `sm:640px`, `md:768px`, `lg:1024px`, `xl:1280px`. Touch targets minimum 44×44px. No horizontal scrolling permitted. Lighthouse mobile score must exceed 85.
+### V. Mobile-First Responsive Design & Horizontal Scrolling
+All UI is designed for mobile first, then progressively enhanced for larger screens using Tailwind CSS breakpoints: `sm:640px`, `md:768px`, `lg:1024px`, `xl:1280px`. Touch targets minimum 44×44px. Horizontal scrolling is intentional for movie carousels on home page and collection sections. Lighthouse mobile score must exceed 85. Carousel behavior includes:
+- Touch/swipe gesture support for mobile
+- Visible scroll indicators for better UX
+- Responsive card sizing within carousels
 
 ### VI. Automated Deployment
 All production releases go through GitHub Actions CI/CD (`.github/workflows/deploy.yaml`). No manual deployments. The `main` branch is always deployable. Environment secrets are managed exclusively via GitHub Secrets — never committed to source code.
@@ -85,11 +96,14 @@ All production releases go through GitHub Actions CI/CD (`.github/workflows/depl
 - **Deployment**: GitHub Pages via GitHub Actions CI/CD
 
 ### Design Constraints
+- Premium modern VOD UI with clean design language
 - Responsive design (mobile-first approach with breakpoints: mobile, sm, md, lg, xl)
+- Horizontal scrolling carousels for content discovery (2-row layout, 20 movies per section)
 - Accessibility standards (WCAG 2.1 - Level AA)
 - Performance: Initial load < 2s, API calls <500ms, search results < 1s, bundle < 200KB gzipped
 - No external payment integrations
 - GitHub Pages deployment via GitHub Actions CI/CD pipeline
+- Clean gradients, smooth animations, and polished interactions
 
 ## 5. Success Criteria
 
@@ -128,10 +142,10 @@ Testing: Vitest + React Testing Library
 ```
 
 ### Component Structure
-- **Pages**: Trending, TopRated, Search Results, Movie Details
-- **Components**: MovieCard, MovieGrid, Header, SearchBar, DetailCard
-- **Hooks**: useMovie(), useMovieSearch(), useMovies()
-- **Services**: API service layer for TMDB integration
+- **Pages**: Home (Modern VOD with carousels), TrendingMovies, TopRatedMovies, SearchResults, MovieDetails
+- **Components**: MovieCard, MovieGrid, MovieCarousel (horizontal), Header, SearchBar, DetailCard, CategoryFilter, SectionCarousel
+- **Hooks**: useMovie(), useMovieSearch(), useMovies(), useMoviesByGenre(), useCarousel()
+- **Services**: API service layer for TMDB integration with genre/category support
 
 ### Data Flow
 1. User interaction → Component state update
@@ -148,11 +162,14 @@ Testing: Vitest + React Testing Library
 - **Caching**: 5-minute cache for listing endpoints
 
 ### Key Endpoints
-- `GET /movie/trending` - Trending movies
-- `GET /movie/top_rated` - Top-rated movies
+- `GET /movie/trending` - Trending/Latest movies for home page
+- `GET /movie/top_rated` - Top-rated movies for home page Top 10
+- `GET /discover/movie?with_genres=<id>` - Movies by genre/category
+- `GET /discover/movie?sort_by=release_date.desc` - New releases for "New on CineScope"
 - `GET /search/movie` - Search by title
 - `GET /movie/{id}` - Movie details
 - `GET /movie/{id}/credits` - Cast information
+- `GET /movie/{id}/similar` - Related/similar movies for recommendations
 
 ## 9. Non-Functional Requirements
 
@@ -314,32 +331,38 @@ The project follows Specification-Driven Development (SDD) principles with organ
 - **src/**: Implementation files organized by components and pages
 - **.github/workflows/**: CI/CD configuration for automated deployment
 
-### C. Component Architecture (with Mobile Responsiveness)
+### C. Component Architecture (with Mobile Responsiveness & Horizontal Scrolling)
 ```
 App (React Router + basename: /cinescope-vod-sdd/)
 ├── Layout (Responsive management)
-│   ├── Header (sticky, responsive h-14 sm:h-16)
+│   ├── Header (sticky, responsive h-14 sm:h-16, premium styling)
 │   │   ├── Logo (responsive h-6 sm:h-8)
 │   │   ├── Desktop Nav (hidden md:flex)
 │   │   ├── Mobile Menu (hamburger, md:hidden)
 │   │   └── Search Bar (hidden lg:block)
 │   ├── Main Content (dynamic routes)
-│   │   ├── TrendingPage (grid: 2 sm:3 md:4 lg:5)
-│   │   ├── TopRatedPage (responsive grid)
-│   │   ├── SearchPage
+│   │   ├── HomePage (Modern VOD with carousels)
+│   │   │   ├── TopLatestCarousel (horizontal scroll, 2-row)
+│   │   │   ├── Top10TodayCarousel (horizontal scroll, 2-row)
+│   │   │   ├── CategoryFilter + CategoryCarousel
+│   │   │   ├── NewOnCineScopeCarousel (horizontal scroll, 2-row)
+│   │   │   └── CriticallyAcclaimedCarousel (horizontal scroll, 2-row)
+│   │   ├── TrendingPage (dedicated page, grid or carousel)
+│   │   ├── TopRatedPage (dedicated page, grid or carousel)
+│   │   ├── SearchResultsPage
 │   │   └── MovieDetailPage
 │   └── Footer (1 sm:2 lg:3 columns, responsive)
-└── Services (tmdbApi.ts - API layer)
+└── Services (tmdbApi.ts - API layer with genre support)
 ```
 
 ### D. Responsive Breakpoints Strategy
 | Breakpoint | Width | Components |
 |-----------|-------|-----------|
-| Mobile | <640px | Hamburger nav, single column |
-| sm | 640px+ | 2-3 column grids |
-| md | 768px+ | Desktop nav visible, 4 columns |
-| lg | 1024px+ | Full features, 5 columns, search bar |
-| xl | 1280px+ | Large screens, optimized spacing |
+| Mobile | <640px | Hamburger nav, carousel: 1.5-2 cards visible |
+| sm | 640px+ | 2 cards visible in carousel |
+| md | 768px+ | Desktop nav visible, 3 cards in carousel |
+| lg | 1024px+ | Full features, 4-5 cards in carousel, search bar |
+| xl | 1280px+ | Large screens, 5-6 cards visible, optimized spacing |
 
 ### E. GitHub Pages & CI/CD Pipeline
 **Deployment URL**: https://nishant-nagose.github.io/cinescope-vod-sdd/
