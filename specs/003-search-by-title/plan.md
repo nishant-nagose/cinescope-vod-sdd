@@ -1,6 +1,6 @@
 # Implementation Plan: Search by Title
 
-**Branch**: `003-search-by-title` | **Date**: 2026-04-21 | **Spec**: [./spec.md](./spec.md) | **Status**: PLANNED
+**Branch**: `003-search-by-title` | **Date**: 2026-04-21 | **Spec**: [./spec.md](./spec.md) | **Status**: COMPLETED
 **Input**: Feature specification from `/specs/003-search-by-title/spec.md`
 
 ## Summary
