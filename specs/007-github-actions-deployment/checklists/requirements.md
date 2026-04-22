@@ -33,3 +33,9 @@
 ## Notes
 
 - Spec approved and fully implemented. CI/CD pipeline live and operational 2026-04-21.
+- Implementation verified 2026-04-22 on branch `016-github-actions-deploy`:
+  - `.github/workflows/deploy.yaml` confirmed present with correct triggers, permissions, and deploy-pages@v4
+  - `vite.config.ts` confirmed `base: '/cinescope-vod-sdd/'`
+  - `src/App.tsx` confirmed `<BrowserRouter basename="/cinescope-vod-sdd/">`
+  - `VITE_TMDB_API_KEY` secret referenced in workflow env block
+  - Concurrency group `pages` with `cancel-in-progress: true` in place
