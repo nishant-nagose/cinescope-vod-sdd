@@ -27,13 +27,19 @@ const ChevronIcon = ({ open }: { open: boolean }) => (
   </svg>
 )
 
-export const ContentFilterBar = () => {
+interface ContentFilterBarProps {
+  compact?: boolean
+}
+
+export const ContentFilterBar = ({ compact = false }: ContentFilterBarProps) => {
   const { countries, languages, setCountries, setLanguages } = useContentFilter()
   const { data: countryList } = useCountries()
   const { data: languageList } = useLanguages()
 
   const [countryOpen, setCountryOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [countrySearch, setCountrySearch] = useState('')
+  const [languageSearch, setLanguageSearch] = useState('')
 
   const countryRef = useRef<HTMLDivElement>(null)
   const languageRef = useRef<HTMLDivElement>(null)
@@ -42,9 +48,11 @@ export const ContentFilterBar = () => {
     const handleMouseDown = (e: MouseEvent) => {
       if (countryRef.current && !countryRef.current.contains(e.target as Node)) {
         setCountryOpen(false)
+        setCountrySearch('')
       }
       if (languageRef.current && !languageRef.current.contains(e.target as Node)) {
         setLanguageOpen(false)
+        setLanguageSearch('')
       }
     }
     document.addEventListener('mousedown', handleMouseDown)
@@ -64,38 +72,44 @@ export const ContentFilterBar = () => {
     : `${languages.length} Languages`
 
   const handleCountrySelectAll = () => setCountries([])
-
-  const handleCountryToggle = (code: string) => {
-    if (countries.length === 0) {
-      setCountries([code])
-    } else {
-      const next = countries.includes(code)
-        ? countries.filter(c => c !== code)
-        : [...countries, code]
-      setCountries(next)
-    }
-  }
-
   const handleLanguageSelectAll = () => setLanguages([])
 
-  const handleLanguageToggle = (code: string) => {
-    if (languages.length === 0) {
-      setLanguages([code])
-    } else {
-      const next = languages.includes(code)
-        ? languages.filter(l => l !== code)
-        : [...languages, code]
-      setLanguages(next)
-    }
+  const handleCountryToggle = (code: string) => {
+    const next = countries.length === 0
+      ? [code]
+      : countries.includes(code)
+        ? countries.filter(c => c !== code)
+        : [...countries, code]
+    setCountries(next)
   }
 
+  const handleLanguageToggle = (code: string) => {
+    const next = languages.length === 0
+      ? [code]
+      : languages.includes(code)
+        ? languages.filter(l => l !== code)
+        : [...languages, code]
+    setLanguages(next)
+  }
+
+  const filteredCountries = (countryList ?? []).filter(c =>
+    c.english_name.toLowerCase().includes(countrySearch.toLowerCase())
+  )
+  const filteredLanguages = (languageList ?? []).filter(l =>
+    l.english_name.toLowerCase().includes(languageSearch.toLowerCase())
+  )
+
+  const btnClass = compact
+    ? 'flex items-center gap-1 px-2 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-xs text-white transition-colors min-h-[30px]'
+    : 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm text-white transition-colors min-h-[36px]'
+
   return (
-    <div className="flex items-center gap-3 py-2 flex-wrap">
+    <div className="flex items-center gap-2">
       {/* Country Dropdown */}
       <div className="relative" ref={countryRef}>
         <button
-          onClick={() => { setCountryOpen(o => !o); setLanguageOpen(false) }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm text-white transition-colors min-h-[36px]"
+          onClick={() => { setCountryOpen(o => !o); setLanguageOpen(false); setLanguageSearch('') }}
+          className={btnClass}
           aria-haspopup="listbox"
           aria-expanded={countryOpen}
         >
@@ -105,20 +119,30 @@ export const ContentFilterBar = () => {
         </button>
 
         {countryOpen && (
-          <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
-            <div className="max-h-64 overflow-y-auto">
-              {/* Select All */}
-              <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700">
-                <input
-                  type="checkbox"
-                  checked={countries.length === 0}
-                  onChange={handleCountrySelectAll}
-                  className="rounded text-blue-500"
-                />
-                <span className="text-sm text-white font-medium">Select All</span>
-              </label>
-
-              {countryList?.map(country => (
+          <div className="absolute top-full right-0 mt-1 z-50 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
+            <div className="p-2 border-b border-gray-700">
+              <input
+                type="text"
+                placeholder="Search countries..."
+                value={countrySearch}
+                onChange={e => setCountrySearch(e.target.value)}
+                className="w-full px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+                aria-label="Search countries"
+              />
+            </div>
+            <div className="max-h-56 overflow-y-auto">
+              {countrySearch === '' && (
+                <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={countries.length === 0}
+                    onChange={handleCountrySelectAll}
+                    className="rounded text-blue-500"
+                  />
+                  <span className="text-sm text-white font-medium">Select All</span>
+                </label>
+              )}
+              {filteredCountries.map(country => (
                 <label
                   key={country.iso_3166_1}
                   className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-700 cursor-pointer"
@@ -140,8 +164,8 @@ export const ContentFilterBar = () => {
       {/* Language Dropdown */}
       <div className="relative" ref={languageRef}>
         <button
-          onClick={() => { setLanguageOpen(o => !o); setCountryOpen(false) }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm text-white transition-colors min-h-[36px]"
+          onClick={() => { setLanguageOpen(o => !o); setCountryOpen(false); setCountrySearch('') }}
+          className={btnClass}
           aria-haspopup="listbox"
           aria-expanded={languageOpen}
         >
@@ -151,20 +175,30 @@ export const ContentFilterBar = () => {
         </button>
 
         {languageOpen && (
-          <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
-            <div className="max-h-64 overflow-y-auto">
-              {/* Select All */}
-              <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700">
-                <input
-                  type="checkbox"
-                  checked={languages.length === 0}
-                  onChange={handleLanguageSelectAll}
-                  className="rounded text-blue-500"
-                />
-                <span className="text-sm text-white font-medium">Select All</span>
-              </label>
-
-              {languageList?.map(lang => (
+          <div className="absolute top-full right-0 mt-1 z-50 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
+            <div className="p-2 border-b border-gray-700">
+              <input
+                type="text"
+                placeholder="Search languages..."
+                value={languageSearch}
+                onChange={e => setLanguageSearch(e.target.value)}
+                className="w-full px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+                aria-label="Search languages"
+              />
+            </div>
+            <div className="max-h-56 overflow-y-auto">
+              {languageSearch === '' && (
+                <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={languages.length === 0}
+                    onChange={handleLanguageSelectAll}
+                    className="rounded text-blue-500"
+                  />
+                  <span className="text-sm text-white font-medium">Select All</span>
+                </label>
+              )}
+              {filteredLanguages.map(lang => (
                 <label
                   key={lang.iso_639_1}
                   className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-700 cursor-pointer"

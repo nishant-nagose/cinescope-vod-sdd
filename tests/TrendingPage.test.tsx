@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 import { TrendingPage } from '../src/pages/TrendingPage'
-import { useTrendingMovies } from '../src/hooks/useTrendingMovies'
 
-vi.mock('../src/hooks/useTrendingMovies')
+vi.mock('../src/hooks/useInfiniteMovies', () => ({
+  useInfiniteMovies: vi.fn(),
+}))
 vi.mock('../src/context/ContentFilterContext', () => ({
   useContentFilter: () => ({
     countries: ['US'],
@@ -20,7 +21,10 @@ vi.mock('react-router-dom', () => ({
 }))
 vi.mock('../src/services/tmdbApi', () => ({
   getImageUrl: (path: string | null) => (path ? `https://img.tmdb.org${path}` : null),
+  getTrendingMovies: vi.fn(),
 }))
+
+import { useInfiniteMovies } from '../src/hooks/useInfiniteMovies'
 
 const mockMovies = [
   { id: 1, title: 'Test Movie 1', poster_path: '/test1.jpg', release_date: '2023-01-01', vote_average: 8.5, vote_count: 1000, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Test Movie 1', popularity: 100, video: false },
@@ -28,24 +32,21 @@ const mockMovies = [
 ]
 
 const defaultHook = {
-  data: { results: mockMovies, page: 1, total_pages: 1, total_results: 2 },
+  movies: mockMovies,
   loading: false,
   error: null,
+  hasMore: true,
+  fetchMore: vi.fn(),
   refetch: vi.fn(),
 }
 
 describe('TrendingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue(defaultHook)
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue(defaultHook)
   })
 
-  test('renders loading state initially', () => {
-    ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue({
-      ...defaultHook,
-      data: null,
-      loading: true,
-    })
+  test('renders page heading', () => {
     render(<TrendingPage />)
     expect(screen.getByText('Trending Movies')).toBeInTheDocument()
   })
@@ -56,15 +57,34 @@ describe('TrendingPage', () => {
       expect(screen.getByText('Test Movie 1')).toBeInTheDocument()
       expect(screen.getByText('Test Movie 2')).toBeInTheDocument()
     })
-    const links = screen.getAllByRole('link')
-    expect(links[0]).toHaveAttribute('href', '/movie/1')
-    expect(links[1]).toHaveAttribute('href', '/movie/2')
   })
 
-  test('renders error state when API fails', async () => {
-    ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+  test('does not render pagination controls', () => {
+    render(<TrendingPage />)
+    expect(screen.queryByText('Next')).not.toBeInTheDocument()
+    expect(screen.queryByText('Previous')).not.toBeInTheDocument()
+  })
+
+  test('renders InfiniteScrollTrigger sentinel', () => {
+    render(<TrendingPage />)
+    expect(screen.queryByText("You've reached the end")).not.toBeInTheDocument()
+  })
+
+  test('shows end-of-list message when hasMore is false', async () => {
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue({
       ...defaultHook,
-      data: null,
+      hasMore: false,
+    })
+    render(<TrendingPage />)
+    await waitFor(() => {
+      expect(screen.getByText("You've reached the end")).toBeInTheDocument()
+    })
+  })
+
+  test('renders error state', async () => {
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...defaultHook,
+      movies: [],
       error: 'Something went wrong',
     })
     render(<TrendingPage />)

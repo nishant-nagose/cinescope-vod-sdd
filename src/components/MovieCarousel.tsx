@@ -1,6 +1,7 @@
 import { useRef, ReactNode } from 'react'
 import { Movie } from '../types/tmdb'
 import { MovieCard } from './MovieCard'
+import { RankedMovieCard } from './RankedMovieCard'
 
 interface MovieCarouselProps {
   title: string
@@ -10,6 +11,8 @@ interface MovieCarouselProps {
   error?: string | null
   onRetry?: () => void
   emptyMessage?: string
+  rankDisplay?: boolean
+  maxItems?: number
 }
 
 const CarouselSkeleton = () => (
@@ -39,11 +42,14 @@ export const MovieCarousel = ({
   error,
   onRetry,
   emptyMessage = 'No movies available for this section.',
+  rankDisplay = false,
+  maxItems,
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const row1 = movies.slice(0, 10)
-  const row2 = movies.slice(10, 20)
+  const displayMovies = maxItems != null ? movies.slice(0, maxItems) : movies
+  const row1 = rankDisplay ? displayMovies : displayMovies.slice(0, 10)
+  const row2 = rankDisplay ? [] : displayMovies.slice(10, 20)
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return
@@ -108,12 +114,16 @@ export const MovieCarousel = ({
           >
             <div className="flex flex-col gap-3 sm:gap-4 w-max">
               <div className="flex gap-3 sm:gap-4">
-                {row1.map(movie => (
+                {row1.map((movie, i) => (
                   <div
                     key={movie.id}
                     className="w-[150px] sm:w-[165px] md:w-[190px] lg:w-[210px] xl:w-[225px] flex-shrink-0"
                   >
-                    <MovieCard movie={movie} />
+                    {rankDisplay ? (
+                      <RankedMovieCard movie={movie} rank={i + 1} />
+                    ) : (
+                      <MovieCard movie={movie} />
+                    )}
                   </div>
                 ))}
               </div>

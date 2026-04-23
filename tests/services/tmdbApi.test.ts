@@ -198,3 +198,75 @@ describe('network error handling', () => {
     await expect(getTrendingMovies()).rejects.toThrow()
   })
 })
+
+import {
+  getMovieVideos,
+  getWatchProviders,
+  getPersonMovieCredits,
+  getDailyTrending,
+  getWeeklyTrending,
+} from '../../src/services/tmdbApi'
+
+describe('getMovieVideos', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /movie/{id}/videos URL', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ id: 123, results: [] }))
+    await getMovieVideos(123)
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/movie/123/videos')
+  })
+})
+
+describe('getWatchProviders', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /movie/{id}/watch/providers URL', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ id: 123, results: {} }))
+    await getWatchProviders(123)
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/movie/123/watch/providers')
+  })
+})
+
+describe('getPersonMovieCredits', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /person/{id}/movie_credits URL', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ id: 456, cast: [], crew: [] }))
+    await getPersonMovieCredits(456)
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/person/456/movie_credits')
+  })
+})
+
+describe('getDailyTrending', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /trending/movie/day URL with page param', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [], page: 1, total_pages: 1, total_results: 0 }))
+    await getDailyTrending(1)
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/trending/movie/day')
+    expect(url).toContain('page=1')
+  })
+
+  test('defaults to page 1', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [] }))
+    await getDailyTrending()
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('page=1')
+  })
+})
+
+describe('getWeeklyTrending', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('calls /trending/movie/week URL with page param', async () => {
+    mockFetch.mockReturnValueOnce(mockResponse({ results: [], page: 1, total_pages: 1, total_results: 0 }))
+    await getWeeklyTrending(2)
+    const url: string = mockFetch.mock.calls[0][0]
+    expect(url).toContain('/trending/movie/week')
+    expect(url).toContain('page=2')
+  })
+})
