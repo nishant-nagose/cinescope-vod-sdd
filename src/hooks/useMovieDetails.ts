@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { getMovieDetails, getMovieCredits, getSimilarMovies } from '../services/tmdbApi'
-import { MovieDetails, CastMember, Movie, CreditsResponse, SimilarMoviesResponse } from '../types/tmdb'
+import { MovieDetails, CastMember, CrewMember, Movie, CreditsResponse, SimilarMoviesResponse } from '../types/tmdb'
 
 interface UseMovieDetailsResult {
   movie: MovieDetails | null
   cast: CastMember[]
+  crew: CrewMember[]
   similar: Movie[]
   loading: boolean
   error: string | null
@@ -13,6 +14,7 @@ interface UseMovieDetailsResult {
 export const useMovieDetails = (id: string): UseMovieDetailsResult => {
   const [movie, setMovie] = useState<MovieDetails | null>(null)
   const [cast, setCast] = useState<CastMember[]>([])
+  const [crew, setCrew] = useState<CrewMember[]>([])
   const [similar, setSimilar] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -33,6 +35,7 @@ export const useMovieDetails = (id: string): UseMovieDetailsResult => {
         if (!cancelled) {
           setMovie(movieData)
           setCast((creditsData.cast || []).slice(0, 10))
+          setCrew(creditsData.crew || [])
           setSimilar((similarData.results || []).slice(0, 5))
           setLoading(false)
         }
@@ -47,5 +50,5 @@ export const useMovieDetails = (id: string): UseMovieDetailsResult => {
     return () => { cancelled = true }
   }, [id])
 
-  return { movie, cast, similar, loading, error }
+  return { movie, cast, crew, similar, loading, error }
 }

@@ -15,7 +15,7 @@ export const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <header className="bg-gray-800 shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-14 sm:h-16">
+          <div className="flex justify-between items-center h-14 sm:h-16 gap-2">
             <Link to="/" className="flex items-center flex-shrink-0">
               <img
                 src={cinescopeLogo}
@@ -23,20 +23,25 @@ export const Layout = ({ children }: LayoutProps) => {
                 className="h-6 sm:h-8 w-auto"
               />
             </Link>
-            <nav className="hidden md:flex space-x-6 lg:space-x-8">
-              <Link to="/trending" className="text-sm lg:text-base hover:text-blue-400 transition-colors">
+
+            <nav className="hidden md:flex space-x-4 lg:space-x-6 flex-shrink-0">
+              <Link to="/trending" className="text-sm lg:text-base hover:text-blue-400 transition-colors whitespace-nowrap">
                 Trending
               </Link>
-              <Link to="/top-rated" className="text-sm lg:text-base hover:text-blue-400 transition-colors">
+              <Link to="/top-rated" className="text-sm lg:text-base hover:text-blue-400 transition-colors whitespace-nowrap">
                 Top Rated
               </Link>
-              <Link to="/search" className="text-sm lg:text-base hover:text-blue-400 transition-colors">
+              <Link to="/search" className="text-sm lg:text-base hover:text-blue-400 transition-colors whitespace-nowrap">
                 Search
               </Link>
             </nav>
 
-            <div className="hidden lg:block w-56 xl:w-72">
-              <SearchBar placeholder="Search movies..." className="w-full" />
+            {/* Search + Filter in header (desktop) */}
+            <div className="hidden lg:flex items-center gap-2 flex-1 max-w-xl justify-end">
+              <div className="flex-1 max-w-xs">
+                <SearchBar placeholder="Search movies..." className="w-full" />
+              </div>
+              <ContentFilterBar compact />
             </div>
 
             <button
@@ -73,12 +78,12 @@ export const Layout = ({ children }: LayoutProps) => {
               >
                 Search
               </Link>
+              <div className="px-4 py-2 flex items-center gap-2">
+                <SearchBar placeholder="Search..." className="flex-1" />
+                <ContentFilterBar compact />
+              </div>
             </nav>
           )}
-        </div>
-
-        <div className="border-t border-gray-700 px-3 sm:px-4 md:px-6 lg:px-8">
-          <ContentFilterBar />
         </div>
       </header>
 

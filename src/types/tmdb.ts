@@ -144,3 +144,55 @@ export interface ContentFilterParams {
   countries: string[]
   languages: string[]
 }
+
+export interface MovieVideo {
+  id: string
+  key: string
+  name: string
+  site: string
+  type: string
+  official: boolean
+  published_at: string
+}
+
+export interface MovieVideosResponse {
+  id: number
+  results: MovieVideo[]
+}
+
+export interface WatchProvider {
+  display_priority: number
+  logo_path: string
+  provider_id: number
+  provider_name: string
+}
+
+export interface WatchProvidersForCountry {
+  link: string
+  flatrate?: WatchProvider[]
+  rent?: WatchProvider[]
+  buy?: WatchProvider[]
+}
+
+export interface WatchProvidersResponse {
+  id: number
+  results: Record<string, WatchProvidersForCountry>
+}
+
+export interface PersonMovieCredit {
+  id: number
+  title: string
+  poster_path: string | null
+  release_date: string
+  vote_average: number
+  popularity: number
+  character?: string
+  job?: string
+  department?: string
+}
+
+export interface PersonMovieCredits {
+  id: number
+  cast: PersonMovieCredit[]
+  crew: PersonMovieCredit[]
+}

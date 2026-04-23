@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { useMovieSearch } from '../hooks/useMovieSearch'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useContentFilter } from '../context/ContentFilterContext'
 import { MovieGrid } from '../components/MovieGrid'
-import { PaginationControls } from '../components/PaginationControls'
+import { InfiniteScrollTrigger } from '../components/InfiniteScrollTrigger'
 import { SearchBar } from '../components/SearchBar'
-import { Movie } from '../types/tmdb'
+import { searchMovies } from '../services/tmdbApi'
+import { Movie, SearchResponse } from '../types/tmdb'
 
 type SortOption = 'relevance' | 'rating' | 'release_date'
 
@@ -23,16 +24,71 @@ const sortMovies = (movies: Movie[], sort: SortOption): Movie[] => {
 }
 
 export const SearchPage = () => {
-  const { results, loading, error, query, page, totalPages, setQuery, setPage } =
-    useMovieSearch()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const query = searchParams.get('q') || ''
   const { languages } = useContentFilter()
   const [sortBy, setSortBy] = useState<SortOption>('relevance')
 
-  const languageFilteredResults = languages.length > 0
+  const [results, setResults] = useState<Movie[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const fetchingRef = useRef(0)
+
+  const setQuery = useCallback((q: string) => {
+    setSearchParams(q.length >= 3 ? { q } : {})
+    setResults([])
+    setPage(1)
+    setHasMore(false)
+    setError(null)
+  }, [setSearchParams])
+
+  useEffect(() => {
+    setResults([])
+    setPage(1)
+    setHasMore(false)
+    setError(null)
+    fetchingRef.current = 0
+  }, [query])
+
+  useEffect(() => {
+    if (query.length < 3) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+    if (fetchingRef.current === page && page > 1) return
+
+    let cancelled = false
+    fetchingRef.current = page
+    setLoading(true)
+
+    searchMovies(query, page)
+      .then((data: SearchResponse) => {
+        if (!cancelled) {
+          setResults(prev => page === 1 ? data.results : [...prev, ...data.results])
+          setHasMore(page < data.total_pages)
+          setError(null)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError('Something went wrong')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    return () => { cancelled = true }
+  }, [query, page])
+
+  const fetchMore = useCallback(() => {
+    if (!loading && hasMore) setPage(prev => prev + 1)
+  }, [loading, hasMore])
+
+  const languageFiltered = languages.length > 0
     ? results.filter(m => languages.includes(m.original_language))
     : results
 
-  const sortedResults = sortMovies(languageFilteredResults, sortBy)
+  const sorted = sortMovies(languageFiltered, sortBy)
 
   const renderContent = () => {
     if (!query) {
@@ -49,7 +105,7 @@ export const SearchPage = () => {
         </p>
       )
     }
-    if (!loading && !error && languageFilteredResults.length === 0) {
+    if (!loading && !error && languageFiltered.length === 0 && !hasMore) {
       return (
         <p className="text-gray-400 text-center py-12 text-sm sm:text-base">
           No movies found for &ldquo;{query}&rdquo;.
@@ -59,19 +115,16 @@ export const SearchPage = () => {
     return (
       <>
         <MovieGrid
-          movies={sortedResults}
-          loading={loading}
+          movies={sorted}
+          loading={loading && results.length === 0}
           error={error}
           onRetry={() => setQuery(query)}
         />
-        {totalPages > 1 && (
-          <PaginationControls
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            loading={loading}
-          />
-        )}
+        <InfiniteScrollTrigger
+          onIntersect={fetchMore}
+          hasMore={hasMore}
+          loading={loading}
+        />
       </>
     )
   }

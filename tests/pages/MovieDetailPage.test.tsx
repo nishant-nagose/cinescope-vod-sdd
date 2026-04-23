@@ -4,6 +4,24 @@ import { MovieDetailPage } from '../../src/pages/MovieDetailPage'
 import { useMovieDetails } from '../../src/hooks/useMovieDetails'
 
 vi.mock('../../src/hooks/useMovieDetails')
+vi.mock('../../src/hooks/useMovieVideos', () => ({
+  useMovieVideos: () => ({ data: null, loading: false, error: null, refetch: vi.fn() }),
+}))
+vi.mock('../../src/hooks/useWatchProviders', () => ({
+  useWatchProviders: () => ({ data: null, loading: false, error: null, refetch: vi.fn() }),
+}))
+vi.mock('../../src/hooks/usePersonCredits', () => ({
+  usePersonCredits: () => ({ data: null, loading: false, error: null, refetch: vi.fn() }),
+}))
+vi.mock('../../src/context/ContentFilterContext', () => ({
+  useContentFilter: () => ({
+    countries: ['US'],
+    languages: ['en'],
+    filterKey: 'US-en',
+    setCountries: vi.fn(),
+    setLanguages: vi.fn(),
+  }),
+}))
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', () => ({
@@ -13,6 +31,7 @@ vi.mock('react-router-dom', () => ({
 }))
 vi.mock('../../src/services/tmdbApi', () => ({
   getImageUrl: (path: string | null) => path ? `https://img.tmdb.org${path}` : null,
+  getMovieVideos: vi.fn().mockResolvedValue({ id: 123, results: [] }),
 }))
 
 const mockMovie = {
@@ -25,11 +44,14 @@ const mockMovie = {
 const mockCast = [
   { id: 1, name: 'Leonardo DiCaprio', character: 'Cobb', profile_path: '/leo.jpg', order: 0, adult: false, gender: 2, known_for_department: 'Acting', original_name: 'Leonardo DiCaprio', popularity: 50, cast_id: 1, credit_id: 'abc' },
 ]
+const mockCrew = [
+  { id: 10, name: 'Christopher Nolan', job: 'Director', department: 'Directing', profile_path: null, adult: false, gender: 2, known_for_department: 'Directing', original_name: 'Christopher Nolan', popularity: 80, credit_id: 'xyz' },
+]
 const mockSimilar = [
   { id: 2, title: 'Interstellar', poster_path: '/inter.jpg', release_date: '2014-11-05', vote_average: 8.6, vote_count: 28000, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Interstellar', popularity: 90, video: false },
 ]
 
-const defaultHook = { movie: mockMovie, cast: mockCast, similar: mockSimilar, loading: false, error: null }
+const defaultHook = { movie: mockMovie, cast: mockCast, crew: mockCrew, similar: mockSimilar, loading: false, error: null }
 
 describe('MovieDetailPage', () => {
   beforeEach(() => {
@@ -56,11 +78,16 @@ describe('MovieDetailPage', () => {
     expect(screen.getByText('Sci-Fi')).toBeInTheDocument()
   })
 
-  test('renders cast section', async () => {
+  test('renders actors section', async () => {
     render(<MovieDetailPage />)
-    await waitFor(() => expect(screen.getByText('Cast')).toBeInTheDocument())
-    expect(screen.getByText('Leonardo DiCaprio')).toBeInTheDocument()
-    expect(screen.getByText('Cobb')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Actors')).toBeInTheDocument())
+    expect(screen.getAllByText('Leonardo DiCaprio').length).toBeGreaterThan(0)
+  })
+
+  test('renders director section', async () => {
+    render(<MovieDetailPage />)
+    await waitFor(() => expect(screen.getAllByText('Director').length).toBeGreaterThan(0))
+    expect(screen.getAllByText('Christopher Nolan').length).toBeGreaterThan(0)
   })
 
   test('renders similar movies section', async () => {

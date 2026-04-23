@@ -1,17 +1,13 @@
-import { useTopRatedMovies } from '../hooks/useTopRatedMovies'
+import { useInfiniteMovies } from '../hooks/useInfiniteMovies'
+import { getTopRatedMovies } from '../services/tmdbApi'
 import { MovieGrid } from '../components/MovieGrid'
-import { PaginationControls } from '../components/PaginationControls'
+import { InfiniteScrollTrigger } from '../components/InfiniteScrollTrigger'
 
 export const TopRatedPage = () => {
-  const {
-    movies,
-    currentPage,
-    totalPages,
-    loading,
-    error,
-    loadPage,
-    refetch
-  } = useTopRatedMovies()
+  const { movies, loading, error, hasMore, fetchMore, refetch } = useInfiniteMovies(
+    getTopRatedMovies,
+    { cacheKeyPrefix: 'top-rated-infinite' }
+  )
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
@@ -22,19 +18,16 @@ export const TopRatedPage = () => {
 
       <MovieGrid
         movies={movies}
-        loading={loading}
+        loading={loading && movies.length === 0}
         error={error}
         onRetry={refetch}
       />
 
-      {totalPages > 1 && (
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={loadPage}
-          loading={loading}
-        />
-      )}
+      <InfiniteScrollTrigger
+        onIntersect={fetchMore}
+        hasMore={hasMore}
+        loading={loading}
+      />
     </div>
   )
 }

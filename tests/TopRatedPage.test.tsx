@@ -1,9 +1,10 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 import { TopRatedPage } from '../src/pages/TopRatedPage'
-import { useTopRatedMovies } from '../src/hooks/useTopRatedMovies'
 
-vi.mock('../src/hooks/useTopRatedMovies')
+vi.mock('../src/hooks/useInfiniteMovies', () => ({
+  useInfiniteMovies: vi.fn(),
+}))
 vi.mock('../src/context/ContentFilterContext', () => ({
   useContentFilter: () => ({
     countries: ['US'],
@@ -18,36 +19,34 @@ vi.mock('react-router-dom', () => ({
     <a href={to}>{children}</a>
   ),
 }))
+vi.mock('../src/services/tmdbApi', () => ({
+  getImageUrl: (path: string | null) => (path ? `https://img.tmdb.org${path}` : null),
+  getTopRatedMovies: vi.fn(),
+}))
+
+import { useInfiniteMovies } from '../src/hooks/useInfiniteMovies'
 
 const mockMovies = [
-  { id: 1, title: 'Top Movie 1', poster_path: '/top1.jpg', release_date: '2023-01-01', vote_average: 9.2 },
-  { id: 2, title: 'Top Movie 2', poster_path: '/top2.jpg', release_date: '2023-02-01', vote_average: 8.8 },
+  { id: 1, title: 'Top Movie 1', poster_path: '/top1.jpg', release_date: '2023-01-01', vote_average: 9.2, vote_count: 5000, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Top Movie 1', popularity: 200, video: false },
+  { id: 2, title: 'Top Movie 2', poster_path: '/top2.jpg', release_date: '2023-02-01', vote_average: 8.8, vote_count: 4000, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Top Movie 2', popularity: 180, video: false },
 ]
 
 const defaultHook = {
   movies: mockMovies,
-  currentPage: 1,
-  totalPages: 5,
   loading: false,
   error: null,
-  loadPage: vi.fn(),
+  hasMore: true,
+  fetchMore: vi.fn(),
   refetch: vi.fn(),
-  nextPage: vi.fn(),
-  prevPage: vi.fn(),
 }
 
 describe('TopRatedPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(useTopRatedMovies as ReturnType<typeof vi.fn>).mockReturnValue(defaultHook)
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue(defaultHook)
   })
 
-  test('renders loading state initially', () => {
-    ;(useTopRatedMovies as ReturnType<typeof vi.fn>).mockReturnValue({
-      ...defaultHook,
-      movies: [],
-      loading: true,
-    })
+  test('renders page heading', () => {
     render(<TopRatedPage />)
     expect(screen.getByText('Top Rated Movies')).toBeInTheDocument()
   })
@@ -60,28 +59,25 @@ describe('TopRatedPage', () => {
     })
   })
 
-  test('renders pagination controls', async () => {
+  test('does not render pagination controls', () => {
+    render(<TopRatedPage />)
+    expect(screen.queryByText('Next')).not.toBeInTheDocument()
+    expect(screen.queryByText('Previous')).not.toBeInTheDocument()
+  })
+
+  test('shows end-of-list message when hasMore is false', async () => {
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...defaultHook,
+      hasMore: false,
+    })
     render(<TopRatedPage />)
     await waitFor(() => {
-      expect(screen.getByText('Next')).toBeInTheDocument()
-      expect(screen.getByText('Previous')).toBeInTheDocument()
+      expect(screen.getByText("You've reached the end")).toBeInTheDocument()
     })
   })
 
-  test('handles page changes', async () => {
-    const loadPage = vi.fn()
-    ;(useTopRatedMovies as ReturnType<typeof vi.fn>).mockReturnValue({
-      ...defaultHook,
-      loadPage,
-    })
-    render(<TopRatedPage />)
-    await waitFor(() => expect(screen.getByText('Next')).toBeInTheDocument())
-    fireEvent.click(screen.getByText('Next'))
-    expect(loadPage).toHaveBeenCalledWith(2)
-  })
-
-  test('renders error state when API fails', async () => {
-    ;(useTopRatedMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+  test('renders error state', async () => {
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue({
       ...defaultHook,
       movies: [],
       error: 'Something went wrong',

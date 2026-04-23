@@ -1,7 +1,12 @@
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMovieDetails } from '../hooks/useMovieDetails'
+import { useMovieVideos } from '../hooks/useMovieVideos'
 import { MovieGrid } from '../components/MovieGrid'
-import { CastSection } from '../components/CastSection'
+import { TrailerPlayer } from '../components/TrailerPlayer'
+import { TrailersSection } from '../components/TrailersSection'
+import { WatchProvidersSection } from '../components/WatchProvidersSection'
+import { FilmographySection } from '../components/FilmographySection'
 import { RatingBadge } from '../components/RatingBadge'
 import { getImageUrl } from '../services/tmdbApi'
 
@@ -24,10 +29,107 @@ const DetailSkeleton = () => (
   </div>
 )
 
+const CastSection = ({
+  cast,
+  crew,
+}: {
+  cast: import('../types/tmdb').CastMember[]
+  crew: import('../types/tmdb').CrewMember[]
+}) => {
+  const directors = crew.filter(c => c.job === 'Director')
+  const producers = crew.filter(c => c.job === 'Producer' || c.job === 'Executive Producer')
+  const others = crew.filter(
+    c => c.job !== 'Director' && c.job !== 'Producer' && c.job !== 'Executive Producer'
+  ).slice(0, 5)
+
+  const photoUrl = (path: string | null) => getImageUrl(path, 'w185')
+
+  const PersonCard = ({ name, sub, path }: { name: string; sub: string; path: string | null }) => (
+    <div className="flex-shrink-0 w-24 md:w-auto text-center">
+      {photoUrl(path) ? (
+        <img
+          src={photoUrl(path)!}
+          alt={name}
+          className="w-24 h-24 md:w-full md:h-28 object-cover rounded-lg bg-gray-700"
+          loading="lazy"
+        />
+      ) : (
+        <div className="w-24 h-24 md:w-full md:h-28 bg-gray-700 rounded-lg flex items-center justify-center">
+          <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+      )}
+      <p className="mt-1 text-xs text-white font-medium truncate">{name}</p>
+      <p className="text-xs text-gray-400 truncate">{sub}</p>
+    </div>
+  )
+
+  return (
+    <section className="mt-8 sm:mt-10">
+      {cast.length > 0 && (
+        <>
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-3">Actors</h2>
+          <div className="flex gap-3 overflow-x-auto pb-3 md:grid md:grid-cols-5 lg:grid-cols-10 md:overflow-visible mb-6">
+            {cast.map(m => (
+              <PersonCard key={m.id} name={m.name} sub={m.character} path={m.profile_path} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {directors.length > 0 && (
+        <>
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-3">Director</h2>
+          <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
+            {directors.map(m => (
+              <PersonCard key={m.id} name={m.name} sub={m.job} path={m.profile_path} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {producers.length > 0 && (
+        <>
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-3">Producer</h2>
+          <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
+            {producers.map(m => (
+              <PersonCard key={m.id} name={m.name} sub={m.job} path={m.profile_path} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {others.length > 0 && (
+        <>
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-3">Key Contributors</h2>
+          <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
+            {others.map(m => (
+              <PersonCard key={m.id} name={m.name} sub={`${m.job} (${m.known_for_department})`} path={m.profile_path} />
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
 export const MovieDetailPage = () => {
   const { id = '' } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { movie, cast, similar, loading, error } = useMovieDetails(id)
+  const { movie, cast, crew, similar, loading, error } = useMovieDetails(id)
+  const { data: videosData } = useMovieVideos(movie?.id ?? 0)
+  const [showTrailer, setShowTrailer] = useState(false)
+
+  const trailer = videosData?.results.find(
+    v => v.site === 'YouTube' && v.type === 'Trailer'
+  ) ?? videosData?.results.find(v => v.site === 'YouTube')
+
+  useEffect(() => {
+    if (!movie) return
+    const timer = setTimeout(() => setShowTrailer(true), 10000)
+    return () => clearTimeout(timer)
+  }, [movie?.id])
 
   if (loading) return <DetailSkeleton />
 
@@ -65,17 +167,28 @@ export const MovieDetailPage = () => {
         </button>
       </div>
 
-      {/* Backdrop */}
-      {backdropUrl && (
-        <div className="relative h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden mt-2">
-          <img
-            src={backdropUrl}
-            alt={movie.title}
-            className="w-full h-full object-cover"
+      {/* Backdrop / Trailer area */}
+      <div className="relative h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden mt-2">
+        {showTrailer && trailer ? (
+          <TrailerPlayer
+            videoKey={trailer.key}
+            autoplay
+            muted
+            title={movie.title}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
-        </div>
-      )}
+        ) : (
+          backdropUrl && (
+            <>
+              <img
+                src={backdropUrl}
+                alt={movie.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
+            </>
+          )
+        )}
+      </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
         {/* Hero: poster + metadata */}
@@ -128,8 +241,17 @@ export const MovieDetailPage = () => {
           </section>
         )}
 
-        {/* Cast */}
-        <CastSection cast={cast} />
+        {/* Trailers & Clips */}
+        <TrailersSection movieId={movie.id} />
+
+        {/* Cast & Crew */}
+        <CastSection cast={cast} crew={crew} />
+
+        {/* Filmography */}
+        <FilmographySection cast={cast} crew={crew} />
+
+        {/* Where to Watch */}
+        <WatchProvidersSection movieId={movie.id} />
 
         {/* Similar Movies */}
         {similar.length > 0 && (
