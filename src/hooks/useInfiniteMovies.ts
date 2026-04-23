@@ -13,7 +13,7 @@ interface UseInfiniteMoviesResult {
 
 export const useInfiniteMovies = (
   fetcher: (page: number, filter: ContentFilterParams) => Promise<DiscoverResponse>,
-  options: { cacheKeyPrefix: string }
+  _options?: { cacheKeyPrefix: string }
 ): UseInfiniteMoviesResult => {
   const { countries, languages, filterKey } = useContentFilter()
   const [movies, setMovies] = useState<Movie[]>([])
