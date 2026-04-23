@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 90 npx vitest run tests/TrendingPage.test.tsx tests/pages/MovieDetailPage.test.tsx --reporter=verbose)"
+    ]
+  }
+}
