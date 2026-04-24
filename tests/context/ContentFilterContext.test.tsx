@@ -14,9 +14,9 @@ describe('ContentFilterContext', () => {
     expect(result.current.languages).toEqual(['en'])
   })
 
-  test('provides default filterKey of US-en', () => {
+  test('provides default filterKey of US-en-all-all', () => {
     const { result } = renderHook(() => useContentFilter(), { wrapper })
-    expect(result.current.filterKey).toBe('US-en')
+    expect(result.current.filterKey).toBe('US-en-all-all')
   })
 
   test('setCountries updates countries and filterKey', () => {
@@ -25,7 +25,7 @@ describe('ContentFilterContext', () => {
       result.current.setCountries(['KR', 'FR'])
     })
     expect(result.current.countries).toEqual(['KR', 'FR'])
-    expect(result.current.filterKey).toBe('KR,FR-en')
+    expect(result.current.filterKey).toBe('KR,FR-en-all-all')
   })
 
   test('setLanguages updates languages and filterKey', () => {
@@ -34,7 +34,7 @@ describe('ContentFilterContext', () => {
       result.current.setLanguages(['ko', 'fr'])
     })
     expect(result.current.languages).toEqual(['ko', 'fr'])
-    expect(result.current.filterKey).toBe('US-ko,fr')
+    expect(result.current.filterKey).toBe('US-ko,fr-all-all')
   })
 
   test('empty arrays produce filterKey with empty segments', () => {
@@ -43,7 +43,7 @@ describe('ContentFilterContext', () => {
       result.current.setCountries([])
       result.current.setLanguages([])
     })
-    expect(result.current.filterKey).toBe('-')
+    expect(result.current.filterKey).toBe('--all-all')
   })
 
   test('ContentFilterProvider renders children', () => {

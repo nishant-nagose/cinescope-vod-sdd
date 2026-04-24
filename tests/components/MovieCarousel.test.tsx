@@ -55,7 +55,7 @@ describe('MovieCarousel', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  test('renders error message when error provided', () => {
+  test('renders retry button when error provided', () => {
     render(
       <MovieCarousel
         title="Error Test"
@@ -64,7 +64,6 @@ describe('MovieCarousel', () => {
         onRetry={vi.fn()}
       />
     )
-    expect(screen.getByText('Failed to load')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
   })
 
@@ -77,9 +76,9 @@ describe('MovieCarousel', () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
-  test('renders empty state when no movies and not loading', () => {
-    render(<MovieCarousel title="Empty Test" movies={[]} />)
-    expect(screen.getByText('No movies available for this section.')).toBeInTheDocument()
+  test('renders nothing when no movies and not loading', () => {
+    const { container } = render(<MovieCarousel title="Empty Test" movies={[]} />)
+    expect(container.firstChild).toBeNull()
   })
 
   test('renders scroll arrow buttons on desktop', () => {

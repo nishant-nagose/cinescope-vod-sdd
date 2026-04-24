@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { Movie } from '../types/tmdb'
 import { getImageUrl } from '../services/tmdbApi'
@@ -7,7 +8,7 @@ interface RankedMovieCardProps {
   rank: number
 }
 
-export const RankedMovieCard = ({ movie, rank }: RankedMovieCardProps) => {
+export const RankedMovieCard = memo(({ movie, rank }: RankedMovieCardProps) => {
   const posterUrl = getImageUrl(movie.poster_path, 'w342')
 
   return (
@@ -52,4 +53,4 @@ export const RankedMovieCard = ({ movie, rank }: RankedMovieCardProps) => {
       <p className="mt-1.5 text-xs text-white font-medium truncate">{movie.title}</p>
     </Link>
   )
-}
+})

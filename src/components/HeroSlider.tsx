@@ -1,101 +1,84 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Movie } from '../types/tmdb'
 import { getImageUrl } from '../services/tmdbApi'
 import { TrailerPlayer } from './TrailerPlayer'
-import { getMovieVideos } from '../services/tmdbApi'
+import { HeroItem } from '../hooks/useHeroSlider'
 
 interface HeroSliderProps {
-  movies: Movie[]
+  items: HeroItem[]
   loading: boolean
+  currentVideoKey?: string | null
 }
 
 const HeroSkeleton = () => (
-  <div className="w-full h-[420px] sm:h-[520px] md:h-[600px] bg-gray-800 animate-pulse" />
+  <div className="w-full" style={{ minHeight: '70vh', maxHeight: '700px' }}>
+    <div className="w-full h-full bg-gray-800 animate-pulse" style={{ minHeight: '70vh' }} />
+  </div>
 )
 
-export const HeroSlider = ({ movies, loading }: HeroSliderProps) => {
+export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps) => {
   const [activeIndex, setActiveIndexState] = useState(0)
-  const [currentVideoKey, setCurrentVideoKey] = useState<string | null>(null)
   const [muted, setMuted] = useState(true)
+  const [isPaused, setIsPaused] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const videoCache = useRef<Map<number, string | null>>(new Map())
 
-  const fetchVideo = useCallback(async (movie: Movie) => {
-    if (videoCache.current.has(movie.id)) {
-      setCurrentVideoKey(videoCache.current.get(movie.id) ?? null)
-      return
-    }
-    try {
-      const response = await getMovieVideos(movie.id)
-      const trailer = response.results.find(
-        v => v.site === 'YouTube' && v.type === 'Trailer' && v.official
-      ) ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')
-      const key = trailer?.key ?? null
-      videoCache.current.set(movie.id, key)
-      setCurrentVideoKey(key)
-    } catch {
-      videoCache.current.set(movie.id, null)
-      setCurrentVideoKey(null)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (movies.length > 0) {
-      setCurrentVideoKey(null)
-      fetchVideo(movies[activeIndex])
-    }
-  }, [activeIndex, movies, fetchVideo])
-
-  useEffect(() => {
-    if (movies.length === 0) return
+  const startInterval = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
     intervalRef.current = setInterval(() => {
-      setActiveIndexState(prev => (prev + 1) % movies.length)
+      setActiveIndexState(prev => (prev + 1) % items.length)
     }, 6000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [movies.length])
+  }, [items.length])
+
+  useEffect(() => {
+    if (items.length === 0 || isPaused) return
+    startInterval()
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [items.length, isPaused, startInterval])
 
   const goTo = useCallback((index: number) => {
     setActiveIndexState(index)
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(() => {
-      setActiveIndexState(prev => (prev + 1) % movies.length)
-    }, 6000)
-  }, [movies.length])
+    startInterval()
+  }, [startInterval])
 
   const goPrev = useCallback(() => {
-    goTo((activeIndex - 1 + movies.length) % movies.length)
-  }, [activeIndex, goTo, movies.length])
+    goTo((activeIndex - 1 + items.length) % items.length)
+  }, [activeIndex, goTo, items.length])
 
   const goNext = useCallback(() => {
-    goTo((activeIndex + 1) % movies.length)
-  }, [activeIndex, goTo, movies.length])
+    goTo((activeIndex + 1) % items.length)
+  }, [activeIndex, goTo, items.length])
 
   if (loading) return <HeroSkeleton />
-  if (movies.length === 0) return null
+  if (items.length === 0) return null
 
-  const current = movies[activeIndex]
+  const current = items[activeIndex]
+  const isMovie = current.mediaType === 'movie'
+  const title = isMovie ? (current as any).title : (current as any).name
+  const year = isMovie
+    ? ((current as any).release_date ?? '').slice(0, 4)
+    : ((current as any).first_air_date ?? '').slice(0, 4)
+  const detailPath = isMovie ? `/movie/${current.id}` : `/show/${current.id}`
   const backdropUrl = getImageUrl(current.backdrop_path, 'original')
 
   return (
-    <div className="relative w-full h-[420px] sm:h-[520px] md:h-[600px] overflow-hidden bg-gray-900">
-      {currentVideoKey ? (
+    <div
+      className="relative w-full overflow-hidden bg-gray-900"
+      style={{ minHeight: '70vh', maxHeight: '700px' }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {currentVideoKey && isMovie ? (
         <div className="absolute inset-0">
-          <TrailerPlayer
-            videoKey={currentVideoKey}
-            autoplay
-            muted={muted}
-            title={current.title}
-          />
+          <TrailerPlayer videoKey={currentVideoKey} autoplay muted={muted} title={title} />
         </div>
       ) : (
         backdropUrl && (
           <img
             src={backdropUrl}
-            alt={current.title}
+            alt={title}
             className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
           />
         )
       )}
@@ -105,8 +88,13 @@ export const HeroSlider = ({ movies, loading }: HeroSliderProps) => {
 
       {/* Content overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-12 pb-16 z-10">
+        <div className="flex items-center gap-2 mb-2">
+          <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase tracking-wide ${isMovie ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'}`}>
+            {isMovie ? 'Movie' : 'Show'}
+          </span>
+        </div>
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg max-w-2xl line-clamp-2">
-          {current.title}
+          {title}
         </h2>
         <div className="flex items-center gap-3 mb-4">
           {current.vote_average > 0 && (
@@ -114,12 +102,10 @@ export const HeroSlider = ({ movies, loading }: HeroSliderProps) => {
               ★ {current.vote_average.toFixed(1)}
             </span>
           )}
-          {current.release_date && (
-            <span className="text-gray-300 text-sm">{current.release_date.slice(0, 4)}</span>
-          )}
+          {year && <span className="text-gray-300 text-sm">{year}</span>}
         </div>
         <Link
-          to={`/movie/${current.id}`}
+          to={detailPath}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base"
         >
           View Details
@@ -127,7 +113,7 @@ export const HeroSlider = ({ movies, loading }: HeroSliderProps) => {
       </div>
 
       {/* Mute toggle */}
-      {currentVideoKey && (
+      {currentVideoKey && isMovie && (
         <button
           onClick={() => setMuted(m => !m)}
           className="absolute bottom-16 right-4 z-20 p-2 bg-black bg-opacity-60 rounded-full text-white hover:bg-opacity-80 transition-colors"
@@ -168,7 +154,7 @@ export const HeroSlider = ({ movies, loading }: HeroSliderProps) => {
 
       {/* Dot indicators */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {movies.map((_, i) => (
+        {items.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}

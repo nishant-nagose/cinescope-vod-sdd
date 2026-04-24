@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useContentFilter } from '../context/ContentFilterContext'
 import { useCountries } from '../hooks/useCountries'
 import { useLanguages } from '../hooks/useLanguages'
+import { useGenres } from '../hooks/useGenres'
 
 const GlobeIcon = () => (
   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -32,9 +33,10 @@ interface ContentFilterBarProps {
 }
 
 export const ContentFilterBar = ({ compact = false }: ContentFilterBarProps) => {
-  const { countries, languages, setCountries, setLanguages } = useContentFilter()
+  const { countries, languages, contentType, activeCategory, setCountries, setLanguages, setContentType, setActiveCategory } = useContentFilter()
   const { data: countryList } = useCountries()
   const { data: languageList } = useLanguages()
+  const { data: genresData } = useGenres()
 
   const [countryOpen, setCountryOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -104,7 +106,39 @@ export const ContentFilterBar = ({ compact = false }: ContentFilterBarProps) => 
     : 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm text-white transition-colors min-h-[36px]'
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
+      {/* Movies / Shows Toggle */}
+      <div className="flex rounded-lg overflow-hidden border border-gray-600">
+        {(['all', 'movies', 'shows'] as const).map(type => (
+          <button
+            key={type}
+            onClick={() => setContentType(type)}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors capitalize ${
+              contentType === type
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Category Dropdown */}
+      {genresData && (
+        <select
+          value={activeCategory ?? ''}
+          onChange={e => setActiveCategory(e.target.value === '' ? null : Number(e.target.value))}
+          className="px-2 py-1.5 rounded-lg bg-gray-700 text-gray-300 text-xs border border-gray-600 focus:outline-none focus:border-blue-500"
+          aria-label="Category"
+        >
+          <option value="">All Categories</option>
+          {genresData.genres.map(g => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
+        </select>
+      )}
+
       {/* Country Dropdown */}
       <div className="relative" ref={countryRef}>
         <button

@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
-import { TopRatedPage } from '../src/pages/TopRatedPage'
+import { TopRatedPage } from '../../src/pages/TopRatedPage'
 
-vi.mock('../src/hooks/useInfiniteMovies', () => ({
+vi.mock('../../src/hooks/useInfiniteMovies', () => ({
   useInfiniteMovies: vi.fn(),
 }))
-vi.mock('../src/context/ContentFilterContext', () => ({
+vi.mock('../../src/context/ContentFilterContext', () => ({
   useContentFilter: () => ({
     countries: ['US'],
     languages: ['en'],
@@ -19,12 +19,12 @@ vi.mock('react-router-dom', () => ({
     <a href={to}>{children}</a>
   ),
 }))
-vi.mock('../src/services/tmdbApi', () => ({
+vi.mock('../../src/services/tmdbApi', () => ({
   getImageUrl: (path: string | null) => (path ? `https://img.tmdb.org${path}` : null),
   getTopRatedMovies: vi.fn(),
 }))
 
-import { useInfiniteMovies } from '../src/hooks/useInfiniteMovies'
+import { useInfiniteMovies } from '../../src/hooks/useInfiniteMovies'
 
 const mockMovies = [
   { id: 1, title: 'Top Movie 1', poster_path: '/top1.jpg', release_date: '2023-01-01', vote_average: 9.2, vote_count: 5000, overview: '', backdrop_path: null, adult: false, original_language: 'en', original_title: 'Top Movie 1', popularity: 200, video: false },

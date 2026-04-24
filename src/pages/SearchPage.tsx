@@ -1,100 +1,95 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
-import { useContentFilter } from '../context/ContentFilterContext'
-import { MovieGrid } from '../components/MovieGrid'
 import { InfiniteScrollTrigger } from '../components/InfiniteScrollTrigger'
 import { SearchBar } from '../components/SearchBar'
-import { searchMovies } from '../services/tmdbApi'
-import { Movie, SearchResponse } from '../types/tmdb'
+import { useContentSearch } from '../hooks/useContentSearch'
+import { ContentSearchItem } from '../types/tmdb'
+import { getImageUrl } from '../services/tmdbApi'
 
-type SortOption = 'relevance' | 'rating' | 'release_date'
+type SortOption = 'relevance' | 'rating' | 'date'
 
 const SORT_LABELS: Record<SortOption, string> = {
   relevance: 'Relevance',
   rating: 'Rating',
-  release_date: 'Release Date',
+  date: 'Release Date',
 }
 
-const sortMovies = (movies: Movie[], sort: SortOption): Movie[] => {
-  if (sort === 'relevance') return movies
-  return [...movies].sort((a, b) => {
+const sortResults = (items: ContentSearchItem[], sort: SortOption): ContentSearchItem[] => {
+  if (sort === 'relevance') return items
+  return [...items].sort((a, b) => {
     if (sort === 'rating') return b.vote_average - a.vote_average
-    return new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
+    const dateA = a.media_type === 'movie' ? a.release_date : a.first_air_date
+    const dateB = b.media_type === 'movie' ? b.release_date : b.first_air_date
+    return new Date(dateB ?? '').getTime() - new Date(dateA ?? '').getTime()
   })
+}
+
+const SearchResultCard = ({ item }: { item: ContentSearchItem }) => {
+  const isMovie = item.media_type === 'movie'
+  const title = isMovie ? item.title : item.name
+  const date = isMovie ? item.release_date : item.first_air_date
+  const year = date ? new Date(date).getFullYear() : 'TBA'
+  const posterUrl = getImageUrl(item.poster_path, 'w342')
+  const href = `/${isMovie ? 'movie' : 'show'}/${item.id}`
+
+  return (
+    <Link
+      to={href}
+      className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 block"
+    >
+      <div className="aspect-[2/3] relative">
+        {posterUrl ? (
+          <img
+            src={posterUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+            <span className="text-gray-400 text-sm">No Image</span>
+          </div>
+        )}
+        <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded text-xs font-medium">
+          {item.vote_average.toFixed(1)}
+        </div>
+        <div
+          className={`absolute top-1 left-1 sm:top-2 sm:left-2 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${
+            isMovie ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+          }`}
+        >
+          {isMovie ? 'Movie' : 'Show'}
+        </div>
+      </div>
+      <div className="p-2 sm:p-3">
+        <h3 className="font-semibold text-white mb-1 line-clamp-2 text-xs sm:text-sm">{title}</h3>
+        <p className="text-gray-400 text-xs sm:text-sm">{year}</p>
+      </div>
+    </Link>
+  )
 }
 
 export const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
-  const { languages } = useContentFilter()
   const [sortBy, setSortBy] = useState<SortOption>('relevance')
+  const [page] = useState(1)
 
-  const [results, setResults] = useState<Movie[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(false)
-  const fetchingRef = useRef(0)
+  const { results, loading, error, hasMore, fetchMore } = useContentSearch(query, page)
 
   const setQuery = useCallback((q: string) => {
     setSearchParams(q.length >= 3 ? { q } : {})
-    setResults([])
-    setPage(1)
-    setHasMore(false)
-    setError(null)
+    setSortBy('relevance')
   }, [setSearchParams])
 
-  useEffect(() => {
-    setResults([])
-    setPage(1)
-    setHasMore(false)
-    setError(null)
-    fetchingRef.current = 0
-  }, [query])
-
-  useEffect(() => {
-    if (query.length < 3) {
-      setResults([])
-      setLoading(false)
-      return
-    }
-    if (fetchingRef.current === page && page > 1) return
-
-    let cancelled = false
-    fetchingRef.current = page
-    setLoading(true)
-
-    searchMovies(query, page)
-      .then((data: SearchResponse) => {
-        if (!cancelled) {
-          setResults(prev => page === 1 ? data.results : [...prev, ...data.results])
-          setHasMore(page < data.total_pages)
-          setError(null)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError('Something went wrong')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
-
-    return () => { cancelled = true }
-  }, [query, page])
-
-  const fetchMore = useCallback(() => {
-    if (!loading && hasMore) setPage(prev => prev + 1)
-  }, [loading, hasMore])
-
-  const languageFiltered = languages.length > 0
-    ? results.filter(m => languages.includes(m.original_language))
-    : results
-
-  const sorted = sortMovies(languageFiltered, sortBy)
+  const sorted = sortResults(results, sortBy)
 
   const renderContent = () => {
     if (!query) {
       return (
         <p className="text-gray-400 text-center py-12 text-sm sm:text-base">
-          Enter a movie title to start searching.
+          Enter a title to start searching.
         </p>
       )
     }
@@ -105,26 +100,48 @@ export const SearchPage = () => {
         </p>
       )
     }
-    if (!loading && !error && languageFiltered.length === 0 && !hasMore) {
+    if (error) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-red-400 mb-4 text-sm">{error}</p>
+          <button
+            onClick={() => setQuery(query)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      )
+    }
+    if (!loading && results.length === 0) {
       return (
         <p className="text-gray-400 text-center py-12 text-sm sm:text-base">
-          No movies found for &ldquo;{query}&rdquo;.
+          No results found for &ldquo;{query}&rdquo;.
         </p>
       )
     }
     return (
       <>
-        <MovieGrid
-          movies={sorted}
-          loading={loading && results.length === 0}
-          error={error}
-          onRetry={() => setQuery(query)}
-        />
-        <InfiniteScrollTrigger
-          onIntersect={fetchMore}
-          hasMore={hasMore}
-          loading={loading}
-        />
+        {loading && results.length === 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-gray-800 rounded-lg overflow-hidden">
+                <div className="aspect-[2/3] bg-gray-700" />
+                <div className="p-2 sm:p-3 space-y-2">
+                  <div className="bg-gray-700 h-3 rounded w-3/4" />
+                  <div className="bg-gray-700 h-3 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+            {sorted.map(item => (
+              <SearchResultCard key={`${item.media_type}-${item.id}`} item={item} />
+            ))}
+          </div>
+        )}
+        <InfiniteScrollTrigger onIntersect={fetchMore} hasMore={hasMore} loading={loading} />
       </>
     )
   }
@@ -133,7 +150,7 @@ export const SearchPage = () => {
     <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
-          Search Movies
+          Search
         </h1>
         <SearchBar onSearch={setQuery} className="max-w-xl" />
         {query.length > 0 && query.length < 3 && (

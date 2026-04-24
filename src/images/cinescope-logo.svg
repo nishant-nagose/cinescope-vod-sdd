@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 44" width="184" height="44" role="img" aria-label="CineScope">
+  <!-- Aperture / lens ring -->
+  <circle cx="22" cy="22" r="20" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
+  <!-- Inner ring -->
+  <circle cx="22" cy="22" r="13" fill="none" stroke="#60a5fa" stroke-width="1.5" opacity="0.6"/>
+  <!-- Center dot -->
+  <circle cx="22" cy="22" r="5" fill="#60a5fa"/>
+  <!-- Aperture blade hints (short arcs via lines) -->
+  <line x1="22" y1="2" x2="22" y2="8"  stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="22" y1="36" x2="22" y2="42" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="2"  y1="22" x2="8"  y2="22" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="36" y1="22" x2="42" y2="22" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="7"  y1="7"  x2="11" y2="11" stroke="#60a5fa" stroke-width="2"   stroke-linecap="round" opacity="0.7"/>
+  <line x1="33" y1="33" x2="37" y2="37" stroke="#60a5fa" stroke-width="2"   stroke-linecap="round" opacity="0.7"/>
+  <line x1="37" y1="7"  x2="33" y2="11" stroke="#60a5fa" stroke-width="2"   stroke-linecap="round" opacity="0.7"/>
+  <line x1="11" y1="33" x2="7"  y2="37" stroke="#60a5fa" stroke-width="2"   stroke-linecap="round" opacity="0.7"/>
+
+  <!-- "Cine" in white -->
+  <text
+    x="52" y="31"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="25"
+    font-weight="700"
+    letter-spacing="-0.3"
+    fill="#ffffff">Cine</text>
+
+  <!-- "Scope" in blue-400 -->
+  <text
+    x="106" y="31"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="25"
+    font-weight="700"
+    letter-spacing="-0.3"
+    fill="#60a5fa">Scope</text>
+</svg>

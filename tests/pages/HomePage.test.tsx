@@ -2,13 +2,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 import { HomePage } from '../../src/pages/HomePage'
 
-const makeHookData = (results: object[] = []) => ({
-  data: { results, page: 1, total_pages: 1, total_results: results.length },
-  loading: false,
-  error: null,
-  refetch: vi.fn(),
-})
-
 const makeMovie = (id: number) => ({
   id,
   title: `Movie ${id}`,
@@ -25,120 +18,131 @@ const makeMovie = (id: number) => ({
   video: false,
 })
 
-const mockMovies = Array.from({ length: 5 }, (_, i) => makeMovie(i + 1))
-const emptyHook = makeHookData([])
+const mockMovies = Array.from({ length: 3 }, (_, i) => makeMovie(i + 1))
+
+const movieHook = {
+  movies: mockMovies,
+  loading: false,
+  error: null,
+  hasMore: false,
+  fetchMore: vi.fn(),
+  refetch: vi.fn(),
+}
+
+const emptyMovieHook = { movies: [], loading: false, error: null, hasMore: false, fetchMore: vi.fn(), refetch: vi.fn() }
+
+const showHook = { shows: [], loading: false, error: null, hasMore: false, loadMore: vi.fn(), refetch: vi.fn() }
 
 vi.mock('../../src/components/HeroSlider', () => ({
   HeroSlider: () => <div data-testid="hero-slider" />,
 }))
-vi.mock('../../src/hooks/useTrendingMovies', () => ({
-  useTrendingMovies: vi.fn(),
+vi.mock('../../src/components/LazySection', () => ({
+  LazySection: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
-vi.mock('../../src/hooks/useDailyTrending', () => ({
-  useDailyTrending: vi.fn(),
+vi.mock('../../src/components/MovieCarousel', () => ({
+  MovieCarousel: ({ title, movies, error, onRetry }: { title: string; movies?: Array<{ id: number; title: string }>; error?: string | null; onRetry?: () => void }) => (
+    <div>
+      <span>{title}</span>
+      {movies?.map(m => <span key={m.id}>{m.title}</span>)}
+      {error && onRetry && <button onClick={onRetry}>Retry</button>}
+    </div>
+  ),
 }))
-vi.mock('../../src/hooks/useWeeklyTrending', () => ({
-  useWeeklyTrending: vi.fn(),
+vi.mock('../../src/components/ShowCarousel', () => ({
+  ShowCarousel: ({ title }: { title: string }) => <div><span>{title}</span></div>,
 }))
-vi.mock('../../src/hooks/useNewReleases', () => ({
-  useNewReleases: vi.fn(),
+vi.mock('../../src/hooks/useHeroSlider', () => ({
+  useHeroSlider: vi.fn(),
 }))
-vi.mock('../../src/hooks/useCriticallyAcclaimed', () => ({
-  useCriticallyAcclaimed: vi.fn(),
+vi.mock('../../src/hooks/useInfiniteMovies', () => ({
+  useInfiniteMovies: vi.fn(),
 }))
-vi.mock('../../src/hooks/useComedyMovies', () => ({
-  useComedyMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useSciFiFantasyMovies', () => ({
-  useSciFiFantasyMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useRealLifeMovies', () => ({
-  useRealLifeMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useAnimationMovies', () => ({
-  useAnimationMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useRomanceMovies', () => ({
-  useRomanceMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useActionAdventureMovies', () => ({
-  useActionAdventureMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useAwardWinningMovies', () => ({
-  useAwardWinningMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useInspiringMovies', () => ({
-  useInspiringMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useThrillerMovies', () => ({
-  useThrillerMovies: vi.fn(),
-}))
-vi.mock('../../src/hooks/useGenres', () => ({
-  useGenres: vi.fn(),
-}))
-vi.mock('../../src/hooks/useMoviesByGenre', () => ({
-  useMoviesByGenre: vi.fn(),
-}))
+vi.mock('../../src/hooks/useTVDailyTrending', () => ({ useTVDailyTrending: vi.fn() }))
+vi.mock('../../src/hooks/useTVWeeklyTrending', () => ({ useTVWeeklyTrending: vi.fn() }))
+vi.mock('../../src/hooks/useNewShows', () => ({ useNewShows: vi.fn() }))
+vi.mock('../../src/hooks/useRecommendedShows', () => ({ useRecommendedShows: vi.fn() }))
+vi.mock('../../src/hooks/useCriticallyAcclaimedShows', () => ({ useCriticallyAcclaimedShows: vi.fn() }))
+vi.mock('../../src/hooks/useComedyShows', () => ({ useComedyShows: vi.fn() }))
+vi.mock('../../src/hooks/useSciFiFantasyShows', () => ({ useSciFiFantasyShows: vi.fn() }))
+vi.mock('../../src/hooks/useRealLifeShows', () => ({ useRealLifeShows: vi.fn() }))
+vi.mock('../../src/hooks/useAnimationShows', () => ({ useAnimationShows: vi.fn() }))
+vi.mock('../../src/hooks/useRomanceShows', () => ({ useRomanceShows: vi.fn() }))
+vi.mock('../../src/hooks/useActionAdventureShows', () => ({ useActionAdventureShows: vi.fn() }))
+vi.mock('../../src/hooks/useAwardWinningShows', () => ({ useAwardWinningShows: vi.fn() }))
+vi.mock('../../src/hooks/useInspiringShows', () => ({ useInspiringShows: vi.fn() }))
+vi.mock('../../src/hooks/useThrillerShows', () => ({ useThrillerShows: vi.fn() }))
+vi.mock('../../src/hooks/useUpcomingShows', () => ({ useUpcomingShows: vi.fn() }))
 vi.mock('../../src/context/ContentFilterContext', () => ({
   useContentFilter: () => ({
     countries: ['US'],
     languages: ['en'],
-    filterKey: 'US-en',
+    contentType: 'all',
+    activeCategory: null,
+    filterKey: 'US-en-all-all',
     setCountries: vi.fn(),
     setLanguages: vi.fn(),
+    setContentType: vi.fn(),
+    setActiveCategory: vi.fn(),
   }),
 }))
 vi.mock('react-router-dom', () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
-  ),
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
 }))
 vi.mock('../../src/services/tmdbApi', () => ({
   getImageUrl: (path: string | null) => (path ? `https://img.tmdb.org${path}` : null),
+  getTrendingMovies: vi.fn(),
+  getNewReleases: vi.fn(),
+  getCriticallyAcclaimed: vi.fn(),
+  getComedyMovies: vi.fn(),
+  getSciFiFantasyMovies: vi.fn(),
+  getRealLifeMovies: vi.fn(),
+  getAnimationMovies: vi.fn(),
+  getRomanceMovies: vi.fn(),
+  getActionAdventureMovies: vi.fn(),
+  getAwardWinningMovies: vi.fn(),
+  getInspiringMovies: vi.fn(),
+  getThrillerMovies: vi.fn(),
+  getDailyTrending: vi.fn(),
+  getWeeklyTrending: vi.fn(),
+  getUpcomingMovies: vi.fn(),
 }))
 
-import { useTrendingMovies } from '../../src/hooks/useTrendingMovies'
-import { useDailyTrending } from '../../src/hooks/useDailyTrending'
-import { useWeeklyTrending } from '../../src/hooks/useWeeklyTrending'
-import { useNewReleases } from '../../src/hooks/useNewReleases'
-import { useCriticallyAcclaimed } from '../../src/hooks/useCriticallyAcclaimed'
-import { useComedyMovies } from '../../src/hooks/useComedyMovies'
-import { useSciFiFantasyMovies } from '../../src/hooks/useSciFiFantasyMovies'
-import { useRealLifeMovies } from '../../src/hooks/useRealLifeMovies'
-import { useAnimationMovies } from '../../src/hooks/useAnimationMovies'
-import { useRomanceMovies } from '../../src/hooks/useRomanceMovies'
-import { useActionAdventureMovies } from '../../src/hooks/useActionAdventureMovies'
-import { useAwardWinningMovies } from '../../src/hooks/useAwardWinningMovies'
-import { useInspiringMovies } from '../../src/hooks/useInspiringMovies'
-import { useThrillerMovies } from '../../src/hooks/useThrillerMovies'
-import { useGenres } from '../../src/hooks/useGenres'
-import { useMoviesByGenre } from '../../src/hooks/useMoviesByGenre'
-
-const hookWithMovies = makeHookData(mockMovies)
-const genresHook = {
-  data: { genres: [{ id: 28, name: 'Action' }, { id: 35, name: 'Comedy' }] },
-  loading: false,
-  error: null,
-  refetch: vi.fn(),
-}
+import { useHeroSlider } from '../../src/hooks/useHeroSlider'
+import { useInfiniteMovies } from '../../src/hooks/useInfiniteMovies'
+import { useTVDailyTrending } from '../../src/hooks/useTVDailyTrending'
+import { useTVWeeklyTrending } from '../../src/hooks/useTVWeeklyTrending'
+import { useNewShows } from '../../src/hooks/useNewShows'
+import { useRecommendedShows } from '../../src/hooks/useRecommendedShows'
+import { useCriticallyAcclaimedShows } from '../../src/hooks/useCriticallyAcclaimedShows'
+import { useComedyShows } from '../../src/hooks/useComedyShows'
+import { useSciFiFantasyShows } from '../../src/hooks/useSciFiFantasyShows'
+import { useRealLifeShows } from '../../src/hooks/useRealLifeShows'
+import { useAnimationShows } from '../../src/hooks/useAnimationShows'
+import { useRomanceShows } from '../../src/hooks/useRomanceShows'
+import { useActionAdventureShows } from '../../src/hooks/useActionAdventureShows'
+import { useAwardWinningShows } from '../../src/hooks/useAwardWinningShows'
+import { useInspiringShows } from '../../src/hooks/useInspiringShows'
+import { useThrillerShows } from '../../src/hooks/useThrillerShows'
+import { useUpcomingShows } from '../../src/hooks/useUpcomingShows'
 
 const setupMocks = () => {
-  ;(useTrendingMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useDailyTrending as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useWeeklyTrending as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useNewReleases as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useCriticallyAcclaimed as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useComedyMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useSciFiFantasyMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useRealLifeMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useAnimationMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useRomanceMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useActionAdventureMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useAwardWinningMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useInspiringMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useThrillerMovies as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
-  ;(useGenres as ReturnType<typeof vi.fn>).mockReturnValue(genresHook)
-  ;(useMoviesByGenre as ReturnType<typeof vi.fn>).mockReturnValue(hookWithMovies)
+  ;(useHeroSlider as ReturnType<typeof vi.fn>).mockReturnValue({ items: [], loading: false, currentVideoKey: null })
+  ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue(movieHook)
+  ;(useTVDailyTrending as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useTVWeeklyTrending as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useNewShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useRecommendedShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useCriticallyAcclaimedShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useComedyShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useSciFiFantasyShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useRealLifeShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useAnimationShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useRomanceShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useActionAdventureShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useAwardWinningShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useInspiringShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useThrillerShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
+  ;(useUpcomingShows as ReturnType<typeof vi.fn>).mockReturnValue(showHook)
 }
 
 describe('HomePage', () => {
@@ -152,16 +156,20 @@ describe('HomePage', () => {
     expect(screen.getByTestId('hero-slider')).toBeInTheDocument()
   })
 
-  test('renders all 15 carousel section headings', async () => {
+  test('renders welcome message', () => {
+    render(<HomePage />)
+    expect(screen.getByText('Welcome to CineScope')).toBeInTheDocument()
+  })
+
+  test('renders movie carousel section headings', async () => {
     render(<HomePage />)
     await waitFor(() => {
       expect(screen.getByText('New Movies on CineScope')).toBeInTheDocument()
       expect(screen.getByText("Today's Top 10 Movies")).toBeInTheDocument()
       expect(screen.getByText('Weekly Top 10 Movies')).toBeInTheDocument()
-      expect(screen.getByText('Movies by Category')).toBeInTheDocument()
       expect(screen.getByText('Recommended Movies')).toBeInTheDocument()
       expect(screen.getByText('Critically Acclaimed Movies')).toBeInTheDocument()
-      expect(screen.getByText('Need a Good Laugh?')).toBeInTheDocument()
+      expect(screen.getByText('Need a Good Laugh? (Movies)')).toBeInTheDocument()
       expect(screen.getByText('Sci-Fi & Fantasy Movies')).toBeInTheDocument()
       expect(screen.getByText('Movies Based on Real Life')).toBeInTheDocument()
       expect(screen.getByText('Anime & Animation Movies')).toBeInTheDocument()
@@ -170,6 +178,7 @@ describe('HomePage', () => {
       expect(screen.getByText('Award-Winning Movies')).toBeInTheDocument()
       expect(screen.getByText('Inspiring Movies')).toBeInTheDocument()
       expect(screen.getByText('Chilling Thriller Movies')).toBeInTheDocument()
+      expect(screen.getByText('Upcoming Movies')).toBeInTheDocument()
     })
   })
 
@@ -181,24 +190,22 @@ describe('HomePage', () => {
   })
 
   test('shows loading state when data is loading', () => {
-    ;(useNewReleases as ReturnType<typeof vi.fn>).mockReturnValue({
-      ...emptyHook,
-      data: null,
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...emptyMovieHook,
       loading: true,
     })
     render(<HomePage />)
     expect(screen.getByText('New Movies on CineScope')).toBeInTheDocument()
   })
 
-  test('shows error with retry button when a section fails', async () => {
-    ;(useNewReleases as ReturnType<typeof vi.fn>).mockReturnValue({
-      ...emptyHook,
-      data: null,
+  test('shows retry button when a section has an error', async () => {
+    ;(useInfiniteMovies as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...emptyMovieHook,
       error: 'Failed to load',
     })
     render(<HomePage />)
     await waitFor(() => {
-      expect(screen.getByText('Failed to load')).toBeInTheDocument()
+      expect(screen.getAllByRole('button', { name: /retry/i }).length).toBeGreaterThan(0)
     })
   })
 })
