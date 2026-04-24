@@ -311,7 +311,6 @@ export interface PersonMovieCredits {
 
 export interface CarouselConfig {
   id: string
-  title: string
   type: 'movies' | 'shows' | 'both'
   hookKey: string
   rankDisplay: boolean

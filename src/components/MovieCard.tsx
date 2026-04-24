@@ -8,7 +8,7 @@ interface MovieCardProps {
 }
 
 export const MovieCard = memo(({ movie }: MovieCardProps) => {
-  const posterUrl = getImageUrl(movie.poster_path, 'w500')
+  const posterUrl = getImageUrl(movie.poster_path, 'w342')
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'TBA'
 
   return (
