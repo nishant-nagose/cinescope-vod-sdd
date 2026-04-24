@@ -64,14 +64,15 @@ export const MovieCarousel = memo(({
     if (!scrollRef.current) return
     const prevLength = prevMoviesLengthRef.current
     prevMoviesLengthRef.current = movies.length
-    if (prevLength > 0 && movies.length > prevLength) {
-      // Load more: content appended — restore saved position
+    if (movies.length > prevLength && prevLength > 0) {
+      // More items appended — hold user's scroll position
       scrollRef.current.scrollLeft = scrollLeftRef.current
-    } else {
-      // Initial load or filter reset — start from beginning
+    } else if (movies.length < prevLength || prevLength === 0) {
+      // Filter reset or initial load — start from beginning
       scrollRef.current.scrollLeft = 0
       scrollLeftRef.current = 0
     }
+    // movies.length === prevLength → same data re-render, do nothing
   }, [movies])
 
   useEffect(() => {

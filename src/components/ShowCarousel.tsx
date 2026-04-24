@@ -63,14 +63,15 @@ export const ShowCarousel = memo(({
     if (!scrollRef.current) return
     const prevLength = prevShowsLengthRef.current
     prevShowsLengthRef.current = shows.length
-    if (prevLength > 0 && shows.length > prevLength) {
-      // Load more: content appended — restore saved position
+    if (shows.length > prevLength && prevLength > 0) {
+      // More items appended — hold user's scroll position
       scrollRef.current.scrollLeft = scrollLeftRef.current
-    } else {
-      // Initial load or filter reset — start from beginning
+    } else if (shows.length < prevLength || prevLength === 0) {
+      // Filter reset or initial load — start from beginning
       scrollRef.current.scrollLeft = 0
       scrollLeftRef.current = 0
     }
+    // shows.length === prevLength → same data re-render, do nothing
   }, [shows])
 
   useEffect(() => {

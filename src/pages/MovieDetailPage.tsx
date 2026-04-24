@@ -153,20 +153,6 @@ export const MovieDetailPage = () => {
 
   return (
     <article>
-      {/* Back button */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors min-h-[44px]"
-          aria-label="Go back"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </button>
-      </div>
-
       {/* Backdrop / Trailer area */}
       <div className="relative w-full mt-2">
         {showTrailer && trailer ? (
@@ -242,7 +228,7 @@ export const MovieDetailPage = () => {
         )}
 
         {/* Trailers & Clips */}
-        <TrailersSection movieId={movie.id} />
+        <TrailersSection contentId={movie.id} contentType="movie" />
 
         {/* Cast & Crew */}
         <CastSection cast={cast} crew={crew} />
@@ -251,7 +237,7 @@ export const MovieDetailPage = () => {
         <FilmographySection cast={cast} crew={crew} />
 
         {/* Where to Watch */}
-        <WatchProvidersSection movieId={movie.id} contentTitle={movie.title} />
+        <WatchProvidersSection contentId={movie.id} contentType="movie" contentTitle={movie.title} />
 
         {/* Similar Movies */}
         {similar.length > 0 && (

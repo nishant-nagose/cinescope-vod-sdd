@@ -1,5 +1,5 @@
 import { ReactNode, useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import cinescopeLogo from '../images/cinescope-logo.svg'
 import { RegionDropdown } from './RegionDropdown'
 import { useContentFilter } from '../context/ContentFilterContext'
@@ -31,9 +31,40 @@ const Pill = ({
   </button>
 )
 
+// ─── Minimal detail-page header ───────────────────────────────────────────────
+const DetailHeader = () => {
+  const navigate = useNavigate()
+  return (
+    <header className="bg-gray-900/95 backdrop-blur-md border-b border-white/8 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 flex items-center justify-between h-14">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors min-h-[44px] px-2"
+          aria-label="Go back"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-sm font-medium">Back</span>
+        </button>
+        <button
+          onClick={() => navigate('/search')}
+          className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+          aria-label="Search"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+  )
+}
+
 // ─── Layout ──────────────────────────────────────────────────────────────────
 export const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { contentType, setContentType, activeCategory, setActiveCategory } = useContentFilter()
   const { data: genresData } = useGenres()
 
@@ -42,6 +73,8 @@ export const Layout = ({ children }: LayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const catRef = useRef<HTMLDivElement>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
+
+  const isDetailPage = /^\/(movie|show)\/\d+/.test(location.pathname)
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -63,6 +96,20 @@ export const Layout = ({ children }: LayoutProps) => {
     : null
 
   const catLabel = activeCategoryName ? activeCategoryName : 'Categories'
+
+  if (isDetailPage) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+        <DetailHeader />
+        <main className="flex-1">{children}</main>
+        <footer className="bg-gray-800 mt-8 sm:mt-12 border-t border-gray-700">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 text-center text-xs text-gray-400">
+            <p>&copy; 2026 CineScope. Powered by TMDB API.</p>
+          </div>
+        </footer>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -107,7 +154,8 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
 
           {/* ── Pill navigation bar ─────────────────────────────────────────── */}
-          <div className="hidden sm:flex items-center gap-2 pb-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          {/* NOTE: No overflow-x-auto here — it would clip absolute dropdown menus */}
+          <div className="hidden sm:flex items-center gap-2 pb-2.5">
             {/* Shows pill */}
             <Pill
               label="Shows"
@@ -130,7 +178,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 onClick={() => setCatOpen(o => !o)}
               />
               {catOpen && genresData && (
-                <div className="absolute top-full left-0 mt-1 z-50 w-52 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden">
+                <div className="absolute top-full left-0 mt-1 z-[200] w-52 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden">
                   <div className="max-h-64 overflow-y-auto py-1">
                     <button
                       onClick={() => { setActiveCategory(null); setCatOpen(false) }}
@@ -164,7 +212,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 onClick={() => setPagesOpen(o => !o)}
               />
               {pagesOpen && (
-                <div className="absolute top-full left-0 mt-1 z-50 w-44 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden py-1">
+                <div className="absolute top-full left-0 mt-1 z-[200] w-44 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden py-1">
                   <Link
                     to="/trending"
                     onClick={() => setPagesOpen(false)}
