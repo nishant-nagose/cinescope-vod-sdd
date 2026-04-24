@@ -2,9 +2,10 @@
 
 **Purpose**: Validate that Spec 011 implementation is complete and meets all requirements
 **Created**: 2026-04-24
+**Updated**: 2026-04-24 — Phase 2 tasks added (T059–T097); status updated to reflect pending work
 **Feature**: [spec.md](../spec.md)
 **Branch**: `021-shows-modernization`
-**Status**: FULLY IMPLEMENTED ✓
+**Status**: PHASE 1 COMPLETE ✓ | PHASE 2 IN PROGRESS ⏳
 
 ---
 
@@ -274,13 +275,89 @@
 
 ---
 
-## Final Status: ✅ FULLY IMPLEMENTED
+## Phase 2: Bug Fixes & Feature Enhancements (Pending — T059–T097)
+
+**Spec Update Date**: 2026-04-24 | **Tasks**: [tasks.md](../tasks.md) Phase 11–16
+
+### Phase 11: Bug Fixes (T059–T070)
+
+- [x] **T059** Dropdown sort — `ContentFilterBar.tsx`: `sortedCountries/sortedLanguages` via `.sort((a,b) => a.english_name.localeCompare(b.english_name))` (FR-036)
+- [x] **T060** Dropdown selected-state — filter logic: `isSelected(option) || label.includes(query)`; selected options always visible during search (FR-035)
+- [x] **T061** Movie Details backdrop — `<div className="relative w-full mt-2">` outer + inner `<div className="relative w-full aspect-video overflow-hidden">` with `absolute inset-0` img (FR-037)
+- [x] **T062** Movie Details trailer — `TrailerPlayer` uses its own `paddingBottom: 56.25%` trick; outer container now `relative w-full` without overflow-hidden clipping it (FR-039)
+- [x] **T063** Show Details backdrop — `className="relative w-full aspect-video bg-gray-900 overflow-hidden max-h-[70vh]"` replaces fixed `h-48 sm:h-64 md:h-80` (FR-037b)
+- [x] **T064** Show Details trailer — backdrop no longer clips; aspect-video container correctly shows full 16:9 (FR-039b)
+- [x] **T065** Hero Slider image — `className="relative w-full overflow-hidden bg-gray-900 aspect-video max-h-[85vh] min-h-[300px]"`; `object-position: center` added; inline style removed (FR-038)
+- [x] **T066** MovieCarousel scroll position — `scrollLeftRef` + scroll event listener + `useLayoutEffect` restore on `movies` array change (FR-040)
+- [x] **T067** ShowCarousel scroll position — same pattern; `useLayoutEffect` restore on `shows` array change (FR-040)
+- [x] **T068** ShowCard image loading — verified: `getImageUrl(show.poster_path, 'w500')` correct; `loading="lazy"` present (FR-041)
+- [x] **T069** ShowCarousel content loading — verified shows prop mapping is correct; both imports and types consistent (FR-041)
+- [x] **T070** TypeScript gate — `npx tsc --noEmit` zero errors
+
+### Phase 12: Header Redesign (T071–T075)
+
+- [x] **T071** `Layout.tsx` — desktop: `hidden lg:grid` with `gridTemplateColumns: 'auto minmax(200px, 1fr) auto auto'`; 4 zones rendered (FR-042, FR-043)
+- [x] **T072** Zone 4: nav links (Trending, Top Rated, Search) + `border-l border-white/20 pl-3 ml-1` divider + `ContentFilterBar compact hideToggle` filter dropdowns (FR-044, FR-045)
+- [x] **T073** `ContentToggle` inline component in `Layout.tsx`: Movies/Shows buttons; clicking active button resets to 'all' (FR-046, FR-047)
+- [x] **T074** Responsive: Desktop `hidden lg:grid`; Tablet `hidden md:flex lg:hidden` with `⋮` overlay trigger; Mobile `flex md:hidden` with search icon + hamburger (FR-042, FR-048)
+- [x] **T075** TypeScript gate — zero errors; `ContentFilterBar` updated with `hideToggle?: boolean` prop
+
+### Phase 13: Global Content Filtering + Hero Slider Sync (T076–T078)
+
+- [x] **T076** `useHeroSlider.ts` — imports `useContentFilter`; `contentType` drives `fetchMovies`/`fetchShows` booleans; effect depends on `[contentType]`; resets `activeIndex` and `currentVideoKey` on type change (FR-049, FR-050)
+- [x] **T077** `ContentFilterContext.Provider` already wraps the full app; `useHeroSlider` reads context directly — no prop-drilling (FR-051)
+- [x] **T078** TypeScript gate — zero errors
+
+### Phase 14: Dynamic Carousel Configuration (T079–T082)
+
+- [x] **T079** `src/types/tmdb.ts` — `CarouselConfig` interface added (`id`, `title`, `type`, `hookKey`, `rankDisplay`) (FR-052)
+- [x] **T080** `src/config/carousels.ts` — NEW: exports `CAROUSEL_CONFIG: CarouselConfig[]` with 30 entries (15 movie + 15 show) in editorial order (FR-052, FR-053)
+- [x] **T081** `src/pages/HomePage.tsx` — `movieHookMap` + `showHookMap` objects; `CAROUSEL_CONFIG.map()` replaces all explicit carousel JSX; old blocks wrapped in `{false &&` (FR-053)
+- [x] **T082** TypeScript gate — zero errors; inline type annotations on hookMap entries
+
+### Phase 15: Direct OTT Navigation (T083–T087)
+
+- [x] **T083** `src/types/tmdb.ts` — `OTTPlatform` interface added (`provider_id`, `provider_name`, `logo_path`, `webUrl`, `appScheme?`) (FR-054)
+- [x] **T084** `src/config/ottProviders.ts` — NEW: maps 10 major TMDB `provider_id` values → `{ appScheme?, webUrlPattern }` (FR-054)
+- [x] **T085** `src/utils/ottNavigation.ts` — NEW: `isMobileDevice()` via `matchMedia('(pointer: coarse)')`; `navigateToOTT()` with 300ms `setTimeout` fallback on mobile (FR-054, FR-055)
+- [x] **T086** `src/components/WatchProvidersSection.tsx` — `ProviderLogo` is now a button; `handleClick` looks up `OTT_PROVIDERS[provider_id]`, constructs `webUrl` from `webUrlPattern.replace('{title}', encodedTitle)`; falls back to TMDB `link` for unknown providers (FR-054, FR-055)
+- [x] **T087** TypeScript gate — zero errors
+
+### Phase 16: Polish & Validation (T088–T093)
+
+- [x] **T088** `npx tsc --noEmit` — zero errors
+- [x] **T089** `npm test` — all tests pass (1 test updated: "Need a Good Laugh? (Movies)" → `getAllByText('Need a Good Laugh?')` to match config title)
+- [x] **T090** `npm run build` — 98 modules, 72.54 kB gzipped (within 200KB budget); zero errors
+- [ ] **T091** Desktop smoke test — pending manual verification
+- [ ] **T092** Mobile viewport smoke test — pending manual verification
+- [ ] **T093** Commit Phase 2 changes — see below
+
+---
+
+## Phase 2 Success Criteria (Pending)
+
+- [ ] **SC-015** Country/Language dropdown options sorted A→Z; selected options always visible during search
+- [ ] **SC-016** Movie Details and Show Details backdrops fill container without top/bottom cropping
+- [ ] **SC-017** Trailer `<iframe>` on Movie/Show Details pages fills container without top/bottom cropping
+- [ ] **SC-018** Hero Slider slide images have no top/bottom cropping on any viewport size
+- [ ] **SC-019** Carousel scroll position is preserved during incremental content loading
+- [ ] **SC-020** Show carousel card images load correctly on initial render
+- [ ] **SC-021** Header displays 4 logical zones (Logo | Search | Content Toggle | Nav+Filters) using CSS Grid
+- [ ] **SC-022** Navigation links (Trending, Top Rated, Search) and filter controls (Categories, Country, Language) are visually separated in the header
+- [ ] **SC-023** Header is fully responsive: 4 zones on desktop; overlay on tablet; hamburger on mobile
+- [ ] **SC-024** Hero slider content reflects Movies/Shows toggle — shows only the selected content type
+- [ ] **SC-025** No carousel title string literals exist in `HomePage.tsx`; all titles sourced from `src/config/carousels.ts`
+- [ ] **SC-026** Clicking an OTT icon opens the OTT platform's web page directly (desktop: new tab); mobile: app-first with web fallback
+
+---
+
+## Phase 1 Status: ✅ FULLY IMPLEMENTED
 
 **Implementation Date**: 2026-04-24
 **Branch**: `021-shows-modernization`
 **Commit**: `9794146`
-**All Success Criteria Met**: 14/14
-**Tasks Completed**: 58/58
+**Phase 1 Success Criteria Met**: 14/14 (SC-001 through SC-014)
+**Phase 1 Tasks Completed**: 58/58 (T001–T058)
 **Tests**: 90/90 passing (11 test files)
 **TypeScript**: Clean (0 errors)
 **Build**: `npm run build` — 95 modules, 242.93 kB JS, 0 warnings
@@ -288,4 +365,11 @@
 **New Pages**: ShowDetailPage
 **New Hooks**: 20 hooks (17 show-specific + useContentSearch + useUpcomingMovies + useSeasonDetails)
 **New API Methods**: 15 TV endpoints
-**Ready for Production**: Yes
+
+## Phase 2 Status: ⏳ IN PROGRESS
+
+**Spec Updated**: 2026-04-24
+**Phase 2 Tasks**: 35 tasks (T059–T093) across 6 phases
+**Phase 2 Success Criteria**: 12 criteria (SC-015 through SC-026)
+**New Files to Create**: `src/config/carousels.ts`, `src/config/ottProviders.ts`, `src/utils/ottNavigation.ts`
+**Files to Modify**: Header.tsx, HeroSlider.tsx, MovieCarousel.tsx, ShowCarousel.tsx, ShowCard.tsx, MovieDetailPage.tsx, ShowDetailPage.tsx, ContentFilterBar.tsx, WatchProviders.tsx, useHeroSlider.ts, HomePage.tsx, tmdb.ts

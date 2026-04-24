@@ -168,7 +168,7 @@ export const MovieDetailPage = () => {
       </div>
 
       {/* Backdrop / Trailer area */}
-      <div className="relative h-48 sm:h-64 md:h-80 lg:h-96 overflow-hidden mt-2">
+      <div className="relative w-full mt-2">
         {showTrailer && trailer ? (
           <TrailerPlayer
             videoKey={trailer.key}
@@ -178,21 +178,21 @@ export const MovieDetailPage = () => {
           />
         ) : (
           backdropUrl && (
-            <>
+            <div className="relative w-full aspect-video overflow-hidden">
               <img
                 src={backdropUrl}
                 alt={movie.title}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
-            </>
+            </div>
           )
         )}
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
         {/* Hero: poster + metadata */}
-        <div className="flex flex-col md:flex-row gap-6 md:gap-8 -mt-16 md:-mt-24 relative z-10">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 mt-4 md:mt-6 relative z-10">
           {posterUrl && (
             <div className="flex-shrink-0 self-start">
               <img
@@ -251,7 +251,7 @@ export const MovieDetailPage = () => {
         <FilmographySection cast={cast} crew={crew} />
 
         {/* Where to Watch */}
-        <WatchProvidersSection movieId={movie.id} />
+        <WatchProvidersSection movieId={movie.id} contentTitle={movie.title} />
 
         {/* Similar Movies */}
         {similar.length > 0 && (

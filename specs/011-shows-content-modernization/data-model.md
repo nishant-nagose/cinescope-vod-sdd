@@ -213,3 +213,79 @@ HeroSlider content
 | `ContentFilterParams.contentType` | Exactly one of: `'movies'`, `'shows'`, `'all'` |
 | `ContentFilterParams.activeCategory` | `null` (all) or a valid TMDB genre ID integer |
 | Hero slider items | Deduplicated by `id + mediaType`; max 10 items |
+
+---
+
+## Phase 2 Types (2026-04-24)
+
+### `CarouselConfig`
+
+Defines a single carousel's display properties and data source. Used in `src/config/carousels.ts` and consumed by `src/pages/HomePage.tsx`.
+
+```typescript
+interface CarouselConfig {
+  id: string;              // Unique identifier (kebab-case, stable key for React)
+  title: string;           // Display title — the single source of truth for carousel label
+  type: 'movies' | 'shows' | 'both'; // Content type this carousel renders
+  hookKey: string;         // Maps to the data hook in the hookMap lookup
+  rankDisplay: boolean;    // Whether to show rank numbers (1, 2, 3...) on cards
+}
+```
+
+### `OTTPlatform`
+
+Represents a streaming service provider in the "Where to Watch" section. Combines TMDB provider data with direct navigation URLs.
+
+```typescript
+interface OTTPlatform {
+  provider_id: number;     // TMDB provider_id (e.g., 8 for Netflix)
+  provider_name: string;   // Display name
+  logo_path: string | null; // TMDB logo path (used to construct image URL)
+  webUrl: string;          // Direct URL to OTT platform content or search page
+  appScheme?: string;      // Mobile app URL scheme for deep-linking (optional)
+}
+```
+
+### `DropdownOption`
+
+Represents a single option in the Country or Language dropdown. Used to enforce sorted display and selected-state visibility.
+
+```typescript
+interface DropdownOption {
+  value: string;    // ISO code (e.g., 'US', 'en')
+  label: string;    // Display name (e.g., 'United States', 'English')
+}
+```
+
+---
+
+## Updated Entity Relationships (Phase 2)
+
+```
+CarouselConfig[]  (src/config/carousels.ts)
+  └── hookKey → hookMap[hookKey] → UseCarouselHookReturn
+                                    └── { items, loading, error, loadMore, hasMore }
+
+OTTPlatform
+  └── derived from TMDB watch-providers response + ottProviders config mapping
+  └── used by WatchProviders component → navigateToOTT() utility
+
+DropdownOption[]
+  └── sorted alphabetically by label before render
+  └── selected options pinned to top during search filtering
+```
+
+---
+
+## Updated Validation Rules (Phase 2)
+
+| Field | Rule |
+|-------|------|
+| `CarouselConfig.id` | Non-empty, unique kebab-case string across all carousel configs |
+| `CarouselConfig.hookKey` | Must match a key in the `hookMap` in `HomePage.tsx` |
+| `CarouselConfig.type` | Exactly one of: `'movies'`, `'shows'`, `'both'` |
+| `OTTPlatform.provider_id` | Positive integer matching TMDB provider_id |
+| `OTTPlatform.webUrl` | Non-empty valid URL string |
+| `OTTPlatform.appScheme` | Optional; must be a valid URL scheme if provided |
+| `DropdownOption.value` | Non-empty ISO code string |
+| `DropdownOption.label` | Non-empty display string; used for alphabetical sort |

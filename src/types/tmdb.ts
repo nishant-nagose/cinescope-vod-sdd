@@ -308,3 +308,19 @@ export interface PersonMovieCredits {
   cast: PersonMovieCredit[]
   crew: PersonMovieCredit[]
 }
+
+export interface CarouselConfig {
+  id: string
+  title: string
+  type: 'movies' | 'shows' | 'both'
+  hookKey: string
+  rankDisplay: boolean
+}
+
+export interface OTTPlatform {
+  provider_id: number
+  provider_name: string
+  logo_path: string | null
+  webUrl: string
+  appScheme?: string
+}

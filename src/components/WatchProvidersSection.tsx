@@ -1,31 +1,56 @@
 import { useWatchProviders } from '../hooks/useWatchProviders'
 import { useContentFilter } from '../context/ContentFilterContext'
 import { WatchProvider } from '../types/tmdb'
+import { OTT_PROVIDERS } from '../config/ottProviders'
+import { navigateToOTT, isMobileDevice } from '../utils/ottNavigation'
 
 interface WatchProvidersSectionProps {
   movieId: number
+  contentTitle?: string
 }
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w92'
 
-const ProviderLogo = ({ provider, link }: { provider: WatchProvider; link: string }) => (
-  <a
-    href={link}
-    target="_blank"
-    rel="noopener noreferrer"
-    title={provider.provider_name}
-    aria-label={`Watch on ${provider.provider_name}`}
-    className="flex-shrink-0"
-  >
-    <img
-      src={`${TMDB_IMAGE_BASE}${provider.logo_path}`}
-      alt={provider.provider_name}
-      className="w-12 h-12 rounded-xl object-cover hover:opacity-80 transition-opacity"
-    />
-  </a>
-)
+const ProviderLogo = ({
+  provider,
+  fallbackLink,
+  contentTitle,
+}: {
+  provider: WatchProvider
+  fallbackLink: string
+  contentTitle: string
+}) => {
+  const handleClick = () => {
+    const config = OTT_PROVIDERS[provider.provider_id]
+    if (config) {
+      const encodedTitle = encodeURIComponent(contentTitle)
+      const webUrl = config.webUrlPattern.replace('{title}', encodedTitle)
+      navigateToOTT(
+        { provider_id: provider.provider_id, provider_name: provider.provider_name, logo_path: provider.logo_path, webUrl, appScheme: config.appScheme },
+        isMobileDevice()
+      )
+    } else {
+      window.open(fallbackLink, '_blank', 'noopener,noreferrer')
+    }
+  }
 
-export const WatchProvidersSection = ({ movieId }: WatchProvidersSectionProps) => {
+  return (
+    <button
+      onClick={handleClick}
+      title={provider.provider_name}
+      aria-label={`Watch on ${provider.provider_name}`}
+      className="flex-shrink-0 cursor-pointer"
+    >
+      <img
+        src={`${TMDB_IMAGE_BASE}${provider.logo_path}`}
+        alt={provider.provider_name}
+        className="w-12 h-12 rounded-xl object-cover hover:opacity-80 transition-opacity"
+      />
+    </button>
+  )
+}
+
+export const WatchProvidersSection = ({ movieId, contentTitle = '' }: WatchProvidersSectionProps) => {
   const { data, loading } = useWatchProviders(movieId)
   const { countries } = useContentFilter()
   const countryCode = countries[0] ?? 'US'
@@ -63,7 +88,7 @@ export const WatchProvidersSection = ({ movieId }: WatchProvidersSectionProps) =
       <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Where to Watch</h2>
       <div className="flex flex-wrap gap-3">
         {allProviders.map(provider => (
-          <ProviderLogo key={provider.provider_id} provider={provider} link={link} />
+          <ProviderLogo key={provider.provider_id} provider={provider} fallbackLink={link} contentTitle={contentTitle} />
         ))}
       </div>
       <p className="mt-2 text-xs text-gray-500">Powered by JustWatch</p>

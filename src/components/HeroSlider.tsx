@@ -11,8 +11,8 @@ interface HeroSliderProps {
 }
 
 const HeroSkeleton = () => (
-  <div className="w-full" style={{ minHeight: '70vh', maxHeight: '700px' }}>
-    <div className="w-full h-full bg-gray-800 animate-pulse" style={{ minHeight: '70vh' }} />
+  <div className="w-full aspect-video max-h-[85vh] min-h-[300px]">
+    <div className="w-full h-full bg-gray-800 animate-pulse" />
   </div>
 )
 
@@ -62,8 +62,7 @@ export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps)
 
   return (
     <div
-      className="relative w-full overflow-hidden bg-gray-900"
-      style={{ minHeight: '70vh', maxHeight: '700px' }}
+      className="relative w-full overflow-hidden bg-gray-900 aspect-video max-h-[85vh] min-h-[300px]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -76,7 +75,7 @@ export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps)
           <img
             src={backdropUrl}
             alt={title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             loading="eager"
             fetchPriority="high"
           />

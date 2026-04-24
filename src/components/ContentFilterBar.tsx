@@ -30,9 +30,10 @@ const ChevronIcon = ({ open }: { open: boolean }) => (
 
 interface ContentFilterBarProps {
   compact?: boolean
+  hideToggle?: boolean
 }
 
-export const ContentFilterBar = ({ compact = false }: ContentFilterBarProps) => {
+export const ContentFilterBar = ({ compact = false, hideToggle = false }: ContentFilterBarProps) => {
   const { countries, languages, contentType, activeCategory, setCountries, setLanguages, setContentType, setActiveCategory } = useContentFilter()
   const { data: countryList } = useCountries()
   const { data: languageList } = useLanguages()
@@ -94,10 +95,19 @@ export const ContentFilterBar = ({ compact = false }: ContentFilterBarProps) => 
     setLanguages(next)
   }
 
-  const filteredCountries = (countryList ?? []).filter(c =>
+  const sortedCountries = [...(countryList ?? [])].sort((a, b) =>
+    a.english_name.localeCompare(b.english_name)
+  )
+  const filteredCountries = sortedCountries.filter(c =>
+    countries.includes(c.iso_3166_1) ||
     c.english_name.toLowerCase().includes(countrySearch.toLowerCase())
   )
-  const filteredLanguages = (languageList ?? []).filter(l =>
+
+  const sortedLanguages = [...(languageList ?? [])].sort((a, b) =>
+    a.english_name.localeCompare(b.english_name)
+  )
+  const filteredLanguages = sortedLanguages.filter(l =>
+    languages.includes(l.iso_639_1) ||
     l.english_name.toLowerCase().includes(languageSearch.toLowerCase())
   )
 
@@ -107,22 +117,24 @@ export const ContentFilterBar = ({ compact = false }: ContentFilterBarProps) => 
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Movies / Shows Toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-gray-600">
-        {(['all', 'movies', 'shows'] as const).map(type => (
-          <button
-            key={type}
-            onClick={() => setContentType(type)}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors capitalize ${
-              contentType === type
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
-          </button>
-        ))}
-      </div>
+      {/* Movies / Shows Toggle — hidden when parent header renders its own toggle */}
+      {!hideToggle && (
+        <div className="flex rounded-lg overflow-hidden border border-gray-600">
+          {(['all', 'movies', 'shows'] as const).map(type => (
+            <button
+              key={type}
+              onClick={() => setContentType(type)}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors capitalize ${
+                contentType === type
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Category Dropdown */}
       {genresData && (

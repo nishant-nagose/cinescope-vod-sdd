@@ -111,7 +111,7 @@ export const ShowDetailPage = () => {
   return (
     <div>
       {/* Backdrop */}
-      <div className="relative w-full h-48 sm:h-64 md:h-80 bg-gray-900 overflow-hidden">
+      <div className="relative w-full aspect-video bg-gray-900 overflow-hidden max-h-[70vh]">
         {backdropUrl && (
           <img src={backdropUrl} alt={show.name} className="absolute inset-0 w-full h-full object-cover opacity-60" loading="lazy" />
         )}
