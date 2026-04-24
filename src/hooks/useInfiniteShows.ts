@@ -22,6 +22,8 @@ export const useInfiniteShows = (
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fetchingPage = useRef(0)
+  const fetcherRef = useRef(fetcher)
+  fetcherRef.current = fetcher
 
   useEffect(() => {
     setShows([])
@@ -39,7 +41,7 @@ export const useInfiniteShows = (
     const load = async () => {
       setLoading(true)
       try {
-        const data = await fetcher(page, { countries, languages })
+        const data = await fetcherRef.current(page, { countries, languages })
         if (!cancelled) {
           setShows(prev => page === 1 ? data.results : [...prev, ...data.results])
           setHasMore(page < data.total_pages)
@@ -56,7 +58,7 @@ export const useInfiniteShows = (
 
     load()
     return () => { cancelled = true }
-  }, [page, filterKey, fetcher, countries, languages])
+  }, [page, filterKey, countries, languages])
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) setPage(prev => prev + 1)

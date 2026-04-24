@@ -130,7 +130,6 @@ export const MovieCarousel = memo(({
           <div
             ref={scrollRef}
             className="overflow-x-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-3 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full"
-            style={{ scrollBehavior: 'smooth' }}
           >
             <div className={`${singleRow ? 'flex' : 'flex flex-col'} gap-3 sm:gap-4 w-max`}>
               <div className="flex gap-3 sm:gap-4">

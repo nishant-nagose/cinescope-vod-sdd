@@ -8,7 +8,7 @@ interface ShowCardProps {
 }
 
 export const ShowCard = memo(({ show }: ShowCardProps) => {
-  const posterUrl = getImageUrl(show.poster_path, 'w500')
+  const posterUrl = getImageUrl(show.poster_path, 'w342')
   const firstAirYear = show.first_air_date ? new Date(show.first_air_date).getFullYear() : 'TBA'
 
   return (

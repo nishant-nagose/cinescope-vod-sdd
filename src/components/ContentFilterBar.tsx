@@ -165,7 +165,7 @@ export const ContentFilterBar = ({ compact = false, hideToggle = false }: Conten
         </button>
 
         {countryOpen && (
-          <div className="absolute top-full right-0 mt-1 z-50 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full right-0 mt-1 z-50 w-56 max-w-[min(14rem,calc(100vw-1rem))] bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
             <div className="p-2 border-b border-gray-700">
               <input
                 type="text"
@@ -221,7 +221,7 @@ export const ContentFilterBar = ({ compact = false, hideToggle = false }: Conten
         </button>
 
         {languageOpen && (
-          <div className="absolute top-full right-0 mt-1 z-50 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full right-0 mt-1 z-50 w-56 max-w-[min(14rem,calc(100vw-1rem))] bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
             <div className="p-2 border-b border-gray-700">
               <input
                 type="text"

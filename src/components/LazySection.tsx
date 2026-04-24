@@ -28,7 +28,7 @@ export const LazySection = ({ children, minHeight = '280px' }: LazySectionProps)
           observer.disconnect()
         }
       },
-      { rootMargin: '600px 0px' }
+      { rootMargin: '1200px 0px' }
     )
     observer.observe(el)
     return () => observer.disconnect()
