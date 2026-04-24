@@ -120,9 +120,13 @@ export const getNewReleases = async (
   page: number = 1,
   filter?: ContentFilterParams
 ): Promise<DiscoverResponse> => {
+  const today = new Date().toISOString().slice(0, 10)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   return apiRequest('/discover/movie', {
     sort_by: 'release_date.desc',
-    'vote_count.gte': '50',
+    'primary_release_date.gte': thirtyDaysAgo,
+    'primary_release_date.lte': today,
+    'vote_count.gte': '3',
     page: page.toString(),
     ...(filter ? buildFilterParams(filter) : {}),
   })
@@ -286,30 +290,42 @@ export const getTrendingTVDaily = async (
   page: number = 1,
   filter?: ContentFilterParams
 ): Promise<TVShowListResponse> => {
-  return apiRequest('/trending/tv/day', {
-    page: page.toString(),
-    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : { language: 'en-US' }),
-  })
+  // Use discover when region is set so with_origin_country is applied
+  if (filter?.countries[0]) {
+    return apiRequest('/discover/tv', {
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '20',
+      page: page.toString(),
+      ...buildTVFilterParams(filter),
+    })
+  }
+  return apiRequest('/trending/tv/day', { page: page.toString() })
 }
 
 export const getTrendingTVWeekly = async (
   page: number = 1,
   filter?: ContentFilterParams
 ): Promise<TVShowListResponse> => {
-  return apiRequest('/trending/tv/week', {
-    page: page.toString(),
-    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : { language: 'en-US' }),
-  })
+  if (filter?.countries[0]) {
+    return apiRequest('/discover/tv', {
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '50',
+      page: page.toString(),
+      ...buildTVFilterParams(filter),
+    })
+  }
+  return apiRequest('/trending/tv/week', { page: page.toString() })
 }
 
 export const getTopRatedTV = async (
   page: number = 1,
   filter?: ContentFilterParams
 ): Promise<TVShowListResponse> => {
-  return apiRequest('/tv/top_rated', {
+  return apiRequest('/discover/tv', {
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '200',
     page: page.toString(),
-    language: filter?.languages[0] ?? 'en-US',
-    ...(filter?.countries[0] ? { region: filter.countries[0] } : {}),
+    ...(filter ? buildTVFilterParams(filter) : {}),
   })
 }
 
@@ -318,12 +334,12 @@ export const getNewShows = async (
   filter?: ContentFilterParams
 ): Promise<TVShowListResponse> => {
   const today = new Date().toISOString().slice(0, 10)
-  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   return apiRequest('/discover/tv', {
     sort_by: 'first_air_date.desc',
     'first_air_date.lte': today,
-    'first_air_date.gte': ninetyDaysAgo,
-    'vote_count.gte': '10',
+    'first_air_date.gte': thirtyDaysAgo,
+    'vote_count.gte': '3',
     page: page.toString(),
     ...(filter ? buildTVFilterParams(filter) : {}),
   })
@@ -338,7 +354,7 @@ export const getRecommendedShows = async (
     'vote_count.gte': '100',
     'vote_average.gte': '7',
     page: page.toString(),
-    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+    ...(filter ? buildTVFilterParams(filter) : {}),
   })
 }
 
@@ -351,7 +367,7 @@ export const getCriticallyAcclaimedShows = async (
     'vote_count.gte': '200',
     'vote_average.gte': '8',
     page: page.toString(),
-    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+    ...(filter ? buildTVFilterParams(filter) : {}),
   })
 }
 
@@ -363,9 +379,9 @@ export const getShowsByGenre = async (
   return apiRequest('/discover/tv', {
     with_genres: genreId.toString(),
     sort_by: 'popularity.desc',
-    'vote_count.gte': '50',
+    'vote_count.gte': '30',
     page: page.toString(),
-    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+    ...(filter ? buildTVFilterParams(filter) : {}),
   })
 }
 
@@ -375,10 +391,10 @@ export const getAwardWinningShows = async (
 ): Promise<TVShowListResponse> => {
   return apiRequest('/discover/tv', {
     sort_by: 'vote_average.desc',
-    'vote_count.gte': '500',
+    'vote_count.gte': '300',
     'vote_average.gte': '8',
     page: page.toString(),
-    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+    ...(filter ? buildTVFilterParams(filter) : {}),
   })
 }
 
@@ -400,6 +416,14 @@ export const getUpcomingMovies = async (page: number = 1): Promise<DiscoverRespo
     'primary_release_date.lte': ninetyDaysLater,
     page: page.toString(),
   })
+}
+
+export const getShowVideos = async (showId: number): Promise<MovieVideosResponse> => {
+  return apiRequest(`/tv/${showId}/videos`)
+}
+
+export const getShowWatchProviders = async (showId: number): Promise<WatchProvidersResponse> => {
+  return apiRequest(`/tv/${showId}/watch/providers`)
 }
 
 export const getShowDetails = async (id: number): Promise<TVShowDetails> => {

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useMovieVideos } from '../hooks/useMovieVideos'
+import { useShowVideos } from '../hooks/useShowVideos'
 import { TrailerPlayer } from './TrailerPlayer'
 import { MovieVideo } from '../types/tmdb'
 
 interface TrailersSectionProps {
-  movieId: number
+  contentId: number
+  contentType?: 'movie' | 'tv'
 }
 
 const sortOrder = (type: string) => {
@@ -45,8 +47,10 @@ const VideoThumbnail = ({
   </button>
 )
 
-export const TrailersSection = ({ movieId }: TrailersSectionProps) => {
-  const { data, loading } = useMovieVideos(movieId)
+export const TrailersSection = ({ contentId, contentType = 'movie' }: TrailersSectionProps) => {
+  const movieResult = useMovieVideos(contentType === 'movie' ? contentId : 0)
+  const showResult  = useShowVideos(contentType === 'tv'    ? contentId : 0)
+  const { data, loading } = contentType === 'movie' ? movieResult : showResult
   const [activeKey, setActiveKey] = useState<string | null>(null)
 
   if (loading) {
@@ -80,7 +84,7 @@ export const TrailersSection = ({ movieId }: TrailersSectionProps) => {
           <TrailerPlayer
             videoKey={activeKey}
             autoplay
-            title="Movie Trailer"
+            title="Trailer"
             onClose={() => setActiveKey(null)}
           />
         </div>

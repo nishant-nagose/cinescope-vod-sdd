@@ -1,13 +1,15 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual'
+}
+
 export const ScrollToTop = () => {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    if (pathname.startsWith('/movie/') || pathname.startsWith('/show/')) {
-      window.scrollTo({ top: 0, behavior: 'instant' })
-    }
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname])
 
   return null

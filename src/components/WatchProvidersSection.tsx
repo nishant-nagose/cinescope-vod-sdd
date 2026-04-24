@@ -1,11 +1,13 @@
 import { useWatchProviders } from '../hooks/useWatchProviders'
+import { useShowWatchProviders } from '../hooks/useShowWatchProviders'
 import { useContentFilter } from '../context/ContentFilterContext'
 import { WatchProvider } from '../types/tmdb'
 import { OTT_PROVIDERS } from '../config/ottProviders'
 import { navigateToOTT, isMobileDevice } from '../utils/ottNavigation'
 
 interface WatchProvidersSectionProps {
-  movieId: number
+  contentId: number
+  contentType?: 'movie' | 'tv'
   contentTitle?: string
 }
 
@@ -50,8 +52,10 @@ const ProviderLogo = ({
   )
 }
 
-export const WatchProvidersSection = ({ movieId, contentTitle = '' }: WatchProvidersSectionProps) => {
-  const { data, loading } = useWatchProviders(movieId)
+export const WatchProvidersSection = ({ contentId, contentType = 'movie', contentTitle = '' }: WatchProvidersSectionProps) => {
+  const movieResult = useWatchProviders(contentType === 'movie' ? contentId : 0)
+  const showResult  = useShowWatchProviders(contentType === 'tv' ? contentId : 0)
+  const { data, loading } = contentType === 'movie' ? movieResult : showResult
   const { countries } = useContentFilter()
   const countryCode = countries[0] ?? 'US'
 

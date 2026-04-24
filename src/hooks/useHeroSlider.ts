@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Movie, TVShow } from '../types/tmdb'
-import { getDailyTrending, getTrendingTVDaily, getMovieVideos } from '../services/tmdbApi'
+import { getDailyTrending, getTrendingTVDaily, getMovieVideos, getTrendingMovies, getRecommendedShows } from '../services/tmdbApi'
 import { useContentFilter } from '../context/ContentFilterContext'
 
 export type HeroItem = (Movie & { mediaType: 'movie' }) | (TVShow & { mediaType: 'tv' })
+
+// Merge regional items first, then fill remaining slots with global items not already present
+const mergeWithRegionalPriority = <T extends { id: number }>(
+  global: T[],
+  regional: T[]
+): T[] => {
+  const seen = new Set(regional.map(i => i.id))
+  const extras = global.filter(i => !seen.has(i.id))
+  return [...regional, ...extras]
+}
 
 export const useHeroSlider = () => {
   const [items, setItems] = useState<HeroItem[]>([])
@@ -12,7 +22,8 @@ export const useHeroSlider = () => {
   const [currentVideoKey, setCurrentVideoKey] = useState<string | null>(null)
   const [videoLoading, setVideoLoading] = useState(false)
   const videoCache = useRef<Map<string, string | null>>(new Map())
-  const { contentType } = useContentFilter()
+  const { contentType, countries } = useContentFilter()
+  const region = countries[0] ?? null
 
   useEffect(() => {
     let cancelled = false
@@ -21,29 +32,43 @@ export const useHeroSlider = () => {
     setCurrentVideoKey(null)
 
     const fetchMovies = contentType !== 'shows'
-    const fetchShows = contentType !== 'movies'
+    const fetchShows  = contentType !== 'movies'
+
+    const regionFilter = region ? { countries: [region], languages: [] } : undefined
 
     Promise.all([
       fetchMovies ? getDailyTrending(1) : Promise.resolve({ results: [] }),
-      fetchShows ? getTrendingTVDaily(1) : Promise.resolve({ results: [] }),
+      fetchMovies && region ? getTrendingMovies(1, regionFilter) : Promise.resolve({ results: [] }),
+      fetchShows  ? getTrendingTVDaily(1) : Promise.resolve({ results: [] }),
+      fetchShows  && region ? getRecommendedShows(1, regionFilter) : Promise.resolve({ results: [] }),
     ])
-      .then(([moviesResp, tvResp]) => {
+      .then(([globalMoviesResp, regionalMoviesResp, globalShowsResp, regionalShowsResp]) => {
         if (cancelled) return
-        const movies: HeroItem[] = (moviesResp.results ?? [])
-          .slice(0, fetchMovies ? 5 : 0)
-          .map(m => ({ ...m, mediaType: 'movie' as const }))
-        const shows: HeroItem[] = (tvResp.results ?? [])
-          .slice(0, fetchShows ? 5 : 0)
-          .map(s => ({ ...s, mediaType: 'tv' as const }))
-        const merged = [...movies, ...shows]
+
+        const globalMovies: HeroItem[] = (globalMoviesResp.results ?? [])
+          .slice(0, 10).map(m => ({ ...m, mediaType: 'movie' as const }))
+        const regionalMovies: HeroItem[] = (regionalMoviesResp.results ?? [])
+          .slice(0, 10).map(m => ({ ...m, mediaType: 'movie' as const }))
+
+        const globalShows: HeroItem[] = (globalShowsResp.results ?? [])
+          .slice(0, 10).map(s => ({ ...s, mediaType: 'tv' as const }))
+        const regionalShows: HeroItem[] = (regionalShowsResp.results ?? [])
+          .slice(0, 10).map(s => ({ ...s, mediaType: 'tv' as const }))
+
+        const movies = fetchMovies ? mergeWithRegionalPriority(globalMovies, regionalMovies) : []
+        const shows  = fetchShows  ? mergeWithRegionalPriority(globalShows, regionalShows)   : []
+
+        const merged = [...movies.slice(0, 5), ...shows.slice(0, 5)]
           .sort((a, b) => b.popularity - a.popularity)
           .slice(0, 10)
+
         setItems(merged)
       })
       .catch(() => { if (!cancelled) setItems([]) })
       .finally(() => { if (!cancelled) setLoading(false) })
+
     return () => { cancelled = true }
-  }, [contentType])
+  }, [contentType, region])
 
   const fetchVideoForItem = useCallback(async (item: HeroItem) => {
     if (item.mediaType !== 'movie') {
