@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect, ReactNode } from 'react'
+import { memo, useRef, useEffect, useLayoutEffect, ReactNode } from 'react'
 import { Movie } from '../types/tmdb'
 import { MovieCard } from './MovieCard'
 import { RankedMovieCard } from './RankedMovieCard'
@@ -49,6 +49,19 @@ export const MovieCarousel = memo(({
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const scrollLeftRef = useRef(0)
+
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const onScroll = () => { scrollLeftRef.current = container.scrollLeft }
+    container.addEventListener('scroll', onScroll, { passive: true })
+    return () => container.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollLeft = scrollLeftRef.current
+  }, [movies])
 
   useEffect(() => {
     if (!onLoadMore || !hasMore || !sentinelRef.current) return

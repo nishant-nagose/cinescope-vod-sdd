@@ -3,10 +3,11 @@
 **Input**: Design documents from `/specs/011-shows-content-modernization/`
 **Branch**: `021-shows-modernization`
 **Prerequisites**: plan.md ✅ | spec.md ✅ | research.md ✅ | data-model.md ✅ | contracts/ ✅
+**Updated**: 2026-04-24 — Phase 2 tasks (T059–T097) added for bug fixes and feature enhancements
 
 **Tests**: Not TDD-mandated by spec. Test tasks are limited to new page tests and relocated test files only.
 
-**Organization**: Tasks grouped by user story. Phase 2 (Foundational) MUST complete before any user story phase begins.
+**Organization**: Phases 1–10 = original implementation (all complete). Phases 11–16 = Phase 2 bug fixes and feature enhancements.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -294,3 +295,175 @@ TypeScript gate                             # T010
 - Commit after each phase (or after each logical group within a phase)
 - The `LazySection` wrapper is the single most impactful performance improvement — ensure it covers every carousel on `HomePage.tsx`
 - Do not modify `src/services/cache.ts` or `src/services/errorHandling.ts` — the existing patterns are reused as-is
+
+---
+
+---
+
+# Phase 2: Bug Fixes & Feature Enhancements (2026-04-24)
+
+**Context**: Phases 1–10 above are fully complete. The tasks below (T059–T097) implement the 7 bug fixes and 5 feature enhancements added in the spec update of 2026-04-24.
+
+**Format**: Same as above — `[P]` = can run in parallel; `[USn]` = maps to user story.
+
+---
+
+## Phase 11: Bug Fixes — Dropdown, Backdrop, Video & Carousel Stability (Priority: P1)
+
+**Goal**: Fix 7 identified UI/UX bugs across dropdown UX, image/video cropping, carousel scroll stability, and show carousel loading.
+
+**Requirements**: FR-035, FR-036, FR-037, FR-037b, FR-038, FR-039, FR-039b, FR-040, FR-041
+
+**Independent Test**: (a) Open Country dropdown and type a query — selected item stays visible; all options are alphabetically sorted A→Z. (b) Open a Movie or Show Details page — backdrop fills container without top/bottom cropping; play trailer — full video frame visible, not cropped. (c) Navigate the Hero Slider — no top/bottom image cropping. (d) Scroll a carousel right then wait for more items to load — scroll position is preserved (does not jump to position 0). (e) Show carousels render card images correctly.
+
+### Bug Fix Group 1: Dropdown Selected-State & Sort Order (FR-035, FR-036)
+
+- [ ] T059 [P] [US6] In `src/components/ContentFilterBar.tsx` (or the dedicated Country/Language dropdown component), sort the full `options` array alphabetically by `label` using `options.sort((a, b) => a.label.localeCompare(b.label))` before rendering; this must happen once on data load, not per keystroke (FR-036)
+- [ ] T060 [P] [US6] In the same dropdown components, when the user types a search query, keep selected options always visible at the top of the filtered results — filter logic: `isSelected(option) || option.label.toLowerCase().includes(query.toLowerCase())`; selected items rendered in a pinned "selected" group above the filtered list (FR-035)
+
+### Bug Fix Group 2: Backdrop & Video Cropping on Details Pages (FR-037, FR-037b, FR-039, FR-039b)
+
+- [ ] T061 [P] [US5] In `src/pages/MovieDetailPage.tsx`: wrap the backdrop `<img>` in an `aspect-ratio: 16/9` container div with `width: 100%; overflow: hidden;` and set `object-fit: cover; width: 100%; height: 100%` on the `<img>`; remove any fixed `height: Npx` or `max-height` constraint that clips the image (FR-037)
+- [ ] T062 [P] [US5] In `src/pages/MovieDetailPage.tsx`: wrap the trailer `<iframe>` in an `aspect-ratio: 16/9` container div with `width: 100%; position: relative;`; set `position: absolute; top: 0; left: 0; width: 100%; height: 100%;` on the `<iframe>`; remove any fixed height that clips the video (FR-039)
+- [ ] T063 [P] [US4] In `src/pages/ShowDetailPage.tsx`: apply the same backdrop fix as T061 — `aspect-ratio: 16/9` container + `object-fit: cover` on the `<img>`; remove fixed-height constraints (FR-037b)
+- [ ] T064 [P] [US4] In `src/pages/ShowDetailPage.tsx`: apply the same trailer fix as T062 — `aspect-ratio: 16/9` container with absolutely-positioned `<iframe>` inside (FR-039b)
+
+### Bug Fix Group 3: Hero Slider Image Cropping (FR-038)
+
+- [ ] T065 [US1] In `src/components/HeroSlider.tsx`: wrap the slide `<img>` element in an `aspect-ratio: 21/9` container on desktop (or `16/9` if 21/9 looks too wide); add `sm:aspect-[4/3]` breakpoint for mobile; set `object-fit: cover; object-position: center; width: 100%; height: 100%;` on the `<img>`; remove any `max-h-[Npx]` or fixed-height class that forces cropping (FR-038)
+
+### Bug Fix Group 4: Carousel Scroll-Position Reset (FR-040)
+
+- [ ] T066 [P] [US2] In `src/components/MovieCarousel.tsx`: add a `scrollLeftRef = useRef(0)` to track the scroll container's `scrollLeft` before items update; add a `useLayoutEffect` that runs after the `items` array changes and restores `scrollContainerRef.current.scrollLeft = scrollLeftRef.current`; ensure `scrollLeftRef.current` is captured in a scroll event handler or just before the state update that triggers more items loading (FR-040)
+- [ ] T067 [P] [US2] In `src/components/ShowCarousel.tsx`: apply the same scroll-position preservation pattern as T066 — `scrollLeftRef`, `useLayoutEffect` restore on `shows` array change (FR-040)
+
+### Bug Fix Group 5: Show Carousels Not Loading Images/Content (FR-041)
+
+- [ ] T068 [US2] Investigate `src/components/ShowCard.tsx`: confirm the TMDB image base URL is correctly prepended to `poster_path` (should be `https://image.tmdb.org/t/p/w500${show.poster_path}` with a null-guard); confirm the `shows` prop is not `undefined` when passed from `ShowCarousel`; add a `loading="lazy"` attribute to the `<img>` if missing (FR-041)
+- [ ] T069 [US2] Investigate `src/components/ShowCarousel.tsx`: confirm it correctly passes the `shows` prop to `ShowCard` items; confirm there is no missing key prop or incorrect array mapping that causes silent failures; add a console warning (dev-only) if `shows` is empty but `loading` is false and `error` is null — this aids debugging in CI (FR-041)
+
+### Phase 11 TypeScript Gate
+
+- [ ] T070 Run `npx tsc --noEmit` — zero errors across all Bug Fix Group changes above; resolve every error before proceeding to Phase 12
+
+**Checkpoint**: All 7 bugs fixed and TypeScript clean
+
+---
+
+## Phase 12: Header Redesign — 4-Zone CSS Grid Layout (Priority: P1)
+
+**Goal**: Redesign the application header into 4 logical zones (Logo | Search | Content Toggle | Navigation+Filters) using CSS Grid. Navigation links (Trending, Top Rated, Search page link) are visually separated from filter controls (Categories, Country, Language) with a `border-l` divider. Three responsive breakpoints: Desktop / Tablet / Mobile.
+
+**Requirements**: FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048
+
+**Independent Test**: Desktop — 4 zones clearly visible; nav text links and filter dropdowns have a visual separator between them. Tablet — Logo + Search + Toggle visible; Nav+Filters collapses to an overlay icon `⋮`. Mobile — Logo + search icon `🔍` + hamburger `☰` only; full nav slides in. Clicking Movies toggle highlights it; clicking again (or Shows is already highlighted) deselects.
+
+- [ ] T071 [P] [US3] Replace the existing flex-based layout in `src/components/Header.tsx` (or the top-level layout/nav component) with a CSS Grid container: `grid-template-columns: auto minmax(280px, 1fr) auto auto` (Logo | Search | Toggle | Nav+Filters); add Tailwind classes `grid items-center gap-4` to the header root; ensure Logo occupies column 1, Search input column 2, Content Toggle column 3, and the Nav+Filters group column 4 (FR-042, FR-043)
+- [ ] T072 [P] [US3] Inside the Nav+Filters zone (column 4 of the grid): create two visually grouped sub-sections separated by a `border-l border-white/20 pl-4 ml-4` divider — left sub-section: navigation text links (Trending, Top Rated, Search page link); right sub-section: compact filter dropdowns (Categories, Country, Language); both sub-sections are `flex items-center gap-3` rows (FR-044, FR-045)
+- [ ] T073 [P] [US3] Add the Movies/Shows Content Toggle button group in column 3: two adjacent buttons (`Movies` and `Shows`); clicking one sets `contentType` to `'movies'` or `'shows'`; clicking the already-active button resets to `'all'`; default state (both off) = `'all'`; active button receives a distinct visual highlight (e.g., `bg-white text-black` vs `border border-white/50 text-white`) (FR-046, FR-047)
+- [ ] T074 [P] [US3] In `src/components/Header.tsx`, implement responsive breakpoints for the grid: Desktop (`lg:` and above) — full 4-column grid with full search text input visible (`placeholder="🔍 Search movies, shows, genres..."`); Tablet (`md:` to `lg:`) — 3-column grid (`auto 1fr auto`), Nav+Filters collapses to a single `⋮` icon button that opens an overlay panel containing the nav links and filter controls; Mobile (below `md:`) — 2-column grid (`auto auto`), Logo left, a search icon `🔍` and hamburger `☰` button right, full nav slides in from the right on hamburger click (FR-042, FR-048)
+- [ ] T075 TypeScript gate — run `npx tsc --noEmit` — zero errors after Header redesign; verify no prop-type errors in the updated Header component
+
+**Checkpoint**: Header displays 4 zones on desktop; collapses correctly on tablet and mobile; content toggle present and functional
+
+---
+
+## Phase 13: Global Content Filtering + Hero Slider Sync (Priority: P1)
+
+**Goal**: The Movies/Shows Content Toggle (added in Phase 12) now governs the hero slider as well as carousels (Phase 5) and search (Phase 8). When "Movies" is selected, the hero slider shows only movie items. When "Shows" is selected, only TV show items. When neither is selected ("All"), the existing mixed behaviour applies.
+
+**Requirements**: FR-049, FR-050, FR-051
+
+**Independent Test**: Select Movies toggle → hero slider cycles through movie slides only; no TV show slides visible. Select Shows toggle → only TV show slides in the slider. Deselect both → mixed movie + show slides (original behaviour).
+
+- [ ] T076 [US3] Update `src/hooks/useHeroSlider.ts`: import `useContentFilter` context hook; read `contentType` from context; when `contentType === 'movies'`, fetch from movie trending endpoint only and skip TV trending fetch; when `contentType === 'shows'`, fetch from TV trending endpoint only and skip movie fetch; when `contentType === 'all'`, retain existing parallel fetch + merge behaviour; deduplicate and sort by popularity in all branches (FR-049, FR-050)
+- [ ] T077 [US3] Verify that `src/pages/HomePage.tsx` passes or exposes context correctly so `useHeroSlider.ts` can consume `ContentFilterContext` without prop-drilling; if the hook does not already have access to the context, ensure `HomePage.tsx` either passes `contentType` as a prop to the hook or that `ContentFilterContext.Provider` wraps the component tree above `useHeroSlider` (FR-051)
+- [ ] T078 TypeScript gate — run `npx tsc --noEmit` — zero errors; confirm `useHeroSlider` TypeScript return type still matches `HeroSlider` component's expected props
+
+**Checkpoint**: Hero slider content respects content type toggle; TypeScript clean
+
+---
+
+## Phase 14: Dynamic Carousel Configuration (Priority: P2)
+
+**Goal**: Remove all hardcoded carousel title strings from `src/pages/HomePage.tsx`. Every carousel's title and order is defined in `src/config/carousels.ts` as an ordered `CarouselConfig[]` array. The home page renders carousels by iterating over this array via a `hookMap` lookup.
+
+**Requirements**: FR-052, FR-053
+
+**Independent Test**: Open `src/pages/HomePage.tsx` — zero carousel title string literals present. Open `src/config/carousels.ts` — all carousel titles and their order are declared there. Change one title string in the config file and run `npm run build` — the changed title appears on the home page.
+
+- [ ] T079 [P] Add `CarouselConfig` interface to `src/types/tmdb.ts` (fields: `id: string`, `title: string`, `type: 'movies' | 'shows' | 'both'`, `hookKey: string`, `rankDisplay: boolean`) — see data-model.md for the full definition (FR-052)
+- [ ] T080 [P] Create `src/config/carousels.ts`: export a `CAROUSEL_CONFIG: CarouselConfig[]` array listing all carousels in editorial display order, each entry containing `id` (stable kebab-case key), `title` (display label — the single source of truth), `type`, `hookKey` (must match a key in the `hookMap` in `HomePage.tsx`), and `rankDisplay` (boolean); include entries for all existing movie and show carousels from Phases 3–4; add "Upcoming Movies" and "Upcoming Shows" entries (FR-052, FR-053)
+- [ ] T081 Update `src/pages/HomePage.tsx`: define a `hookMap` object whose keys are the `hookKey` values from `CAROUSEL_CONFIG` and whose values are the corresponding hook call results (all hooks are still called unconditionally at the top of the component to comply with React hooks rules); replace the current explicit carousel JSX list with a `CAROUSEL_CONFIG.map(config => { const hookData = hookMap[config.hookKey]; return config.type includes 'movies' ? <MovieCarousel title={config.title} ... /> : <ShowCarousel title={config.title} ... /> })` render (FR-053); wrap each rendered carousel in `<LazySection>` as before
+- [ ] T082 TypeScript gate — run `npx tsc --noEmit` — zero errors; in particular confirm `hookMap` keys are fully typed against `CAROUSEL_CONFIG` `hookKey` values (use `Record<CarouselConfig['hookKey'], ...>` pattern or a discriminated union)
+
+**Checkpoint**: No hardcoded carousel titles in HomePage.tsx; all titles live in carousels.ts; TypeScript clean
+
+---
+
+## Phase 15: Direct OTT Navigation (Priority: P2)
+
+**Goal**: "Where to Watch" provider icons navigate users directly to the OTT platform's content or search page — no TMDB redirect. Desktop: new tab to the provider's web URL. Mobile: attempt app deep-link first (300ms timeout), fall back to web URL in new tab.
+
+**Requirements**: FR-054, FR-055
+
+**Independent Test**: Desktop — click a Netflix icon on a Movie/Show Details page → new tab opens at `netflix.com` (or a Netflix search URL for the title); `themoviedb.org` URL does not appear. Mobile viewport — click the icon → OTT app opens if installed; if not installed within 300ms, fallback tab opens to the web URL.
+
+- [ ] T083 [P] Add `OTTPlatform` interface to `src/types/tmdb.ts` (fields: `provider_id: number`, `provider_name: string`, `logo_path: string | null`, `webUrl: string`, `appScheme?: string`) — see data-model.md (FR-054)
+- [ ] T084 [P] Create `src/config/ottProviders.ts`: export an `OTT_PROVIDERS` map of `provider_id → { appScheme, webUrlPattern }` for the major providers supported by TMDB watch-providers (Netflix `8`, Disney+ `337`, Amazon Prime `9`, Apple TV+ `350`, Hulu `15`, HBO Max `384`, Paramount+ `531`, Peacock `386`); `webUrlPattern` is a URL string containing `{title}` placeholder that is replaced at runtime with the content's title (URL-encoded); `appScheme` is the mobile deep-link scheme (e.g., `netflix://` for Netflix) — mark as `undefined` for providers without a known scheme (FR-054)
+- [ ] T085 Create `src/utils/ottNavigation.ts`: export `navigateToOTT(provider: OTTPlatform, isMobile: boolean): void`; on desktop (`isMobile === false`): call `window.open(provider.webUrl, '_blank', 'noopener,noreferrer')`; on mobile (`isMobile === true`): set `window.location.href = provider.appScheme` (deep-link attempt), then `setTimeout(() => window.open(provider.webUrl, '_blank', 'noopener,noreferrer'), 300)` as fallback; export `isMobileDevice(): boolean` that returns `window.matchMedia('(pointer: coarse)').matches` (FR-054, FR-055)
+- [ ] T086 Update `src/components/WatchProviders.tsx` (or equivalent component that renders provider icons): import `navigateToOTT`, `isMobileDevice`, and `OTT_PROVIDERS`; in the click handler for each provider icon, construct an `OTTPlatform` object by looking up the provider's `provider_id` in `OTT_PROVIDERS` and substituting the content title into `webUrlPattern`; if `provider_id` is not found in `OTT_PROVIDERS`, fall back to the existing TMDB `link` field behaviour; call `navigateToOTT(platform, isMobileDevice())` (FR-054, FR-055)
+- [ ] T087 TypeScript gate — run `npx tsc --noEmit` — zero errors; confirm `OTTPlatform` is used consistently across config, utility, and component
+
+**Checkpoint**: Direct OTT navigation works on desktop (new tab) and mobile (app-first + fallback); TypeScript clean
+
+---
+
+## Phase 16: Polish & Validation (Phase 2)
+
+**Purpose**: Final TypeScript gate, regression test run, production build, and manual smoke tests for all Phase 11–15 changes.
+
+- [ ] T088 Run `npx tsc --noEmit` — must report zero errors after all Phase 11–15 changes are merged; fix any remaining type errors before proceeding
+- [ ] T089 Run `npm test` — all existing tests (including `ShowDetailPage.test.tsx` from T055) must pass with zero failures; investigate and fix any regressions caused by Phase 11–15 changes
+- [ ] T090 Run `npm run build` — production bundle must compile with zero TypeScript or Vite errors; check that bundle size has not grown beyond the 200KB gzipped budget
+- [ ] T091 Manual desktop smoke test: (a) open Country dropdown and type — selected option stays visible; options sorted A→Z; (b) open Movie Details — backdrop fills container; play trailer — full video frame visible; (c) open Show Details — same as (b); (d) watch Hero Slider auto-rotate — no image cropping; (e) scroll a carousel right then wait for more items — position is preserved; (f) show carousel shows card images; (g) header shows 4 zones with nav/filter visual separator; (h) click Movies toggle — hero slider + carousels show movies only; (i) click Shows — shows only; (j) open `src/config/carousels.ts` — all carousel titles there, none hardcoded in HomePage.tsx; (k) click an OTT icon in "Where to Watch" — new tab opens at OTT site, not TMDB
+- [ ] T092 Manual mobile viewport smoke test (DevTools mobile emulation at 375×812): (a) header shows Logo + search icon + hamburger only; (b) hamburger opens nav panel with nav links and filter controls; (c) tap an OTT icon — OTT app deep-link is attempted (may not install on simulator; verify no error thrown); fallback web URL opens in new tab
+- [ ] T093 Commit all Phase 2 changes on branch `021-shows-modernization` with a descriptive commit message summarising Phase 11–15; push to remote; raise PR against `main`
+
+**Checkpoint**: All Phase 2 tests pass, build succeeds, smoke tests complete — ready for PR merge
+
+---
+
+## Phase 2 Dependencies & Execution Order
+
+| Phase | Depends On | Can Run In Parallel With |
+|-------|-----------|--------------------------|
+| Phase 11 (Bug Fixes) | Phases 1–10 complete | Phase 12, 14, 15 |
+| Phase 12 (Header Redesign) | Phases 1–10 complete | Phase 11, 14, 15 |
+| Phase 13 (Hero Slider Sync) | Phase 12 complete (toggle must exist in header) | Phase 14, 15 |
+| Phase 14 (Dynamic Carousel Config) | Phases 1–10 complete | Phase 11, 12, 15 |
+| Phase 15 (OTT Navigation) | Phases 1–10 complete | Phase 11, 12, 14 |
+| Phase 16 (Polish) | All of Phases 11–15 complete | — |
+
+### Within Phase 11 (Bug Fixes)
+
+All 5 Bug Fix Groups are independent — T059–T069 can be addressed in any order or in parallel (each touches different files). T070 (TypeScript gate) must run after all groups are done.
+
+### Within Phase 12 (Header)
+
+T071, T072, T073, T074 all touch `src/components/Header.tsx` — do them sequentially in task order. T075 (TypeScript gate) after all four.
+
+### Within Phase 15 (OTT Navigation)
+
+T083 and T084 can run in parallel (different files). T085 depends on T083 (needs `OTTPlatform` type). T086 depends on T084 and T085. T087 (TypeScript gate) after T086.
+
+---
+
+## Phase 2 Notes
+
+- Bug Fix Groups 1–5 in Phase 11 are fully independent; tackle in any order that makes sense given the files being edited
+- Phase 12 (header) must be fully merged before Phase 13 (hero slider sync) starts, because Phase 13's toggle reads the `contentType` state that the Phase 12 Movies/Shows button group writes
+- Phase 14 (dynamic carousel config) is a pure refactor — zero user-visible behaviour change; its sole purpose is to remove hardcoded title strings from `HomePage.tsx`
+- Phase 15 OTT deep-linking is best-effort on mobile; the `setTimeout` fallback ensures the user is never stranded without a navigation path
+- `src/services/cache.ts` and `src/services/errorHandling.ts` remain untouched — existing patterns reused as-is
+- After Phase 16 smoke tests pass, raise a PR; do not merge directly to `main`

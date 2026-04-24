@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Movie, TVShow } from '../types/tmdb'
 import { getDailyTrending, getTrendingTVDaily, getMovieVideos } from '../services/tmdbApi'
+import { useContentFilter } from '../context/ContentFilterContext'
 
 export type HeroItem = (Movie & { mediaType: 'movie' }) | (TVShow & { mediaType: 'tv' })
 
@@ -11,18 +12,28 @@ export const useHeroSlider = () => {
   const [currentVideoKey, setCurrentVideoKey] = useState<string | null>(null)
   const [videoLoading, setVideoLoading] = useState(false)
   const videoCache = useRef<Map<string, string | null>>(new Map())
+  const { contentType } = useContentFilter()
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    Promise.all([getDailyTrending(1), getTrendingTVDaily(1)])
+    setActiveIndexState(0)
+    setCurrentVideoKey(null)
+
+    const fetchMovies = contentType !== 'shows'
+    const fetchShows = contentType !== 'movies'
+
+    Promise.all([
+      fetchMovies ? getDailyTrending(1) : Promise.resolve({ results: [] }),
+      fetchShows ? getTrendingTVDaily(1) : Promise.resolve({ results: [] }),
+    ])
       .then(([moviesResp, tvResp]) => {
         if (cancelled) return
         const movies: HeroItem[] = (moviesResp.results ?? [])
-          .slice(0, 5)
+          .slice(0, fetchMovies ? 5 : 0)
           .map(m => ({ ...m, mediaType: 'movie' as const }))
         const shows: HeroItem[] = (tvResp.results ?? [])
-          .slice(0, 5)
+          .slice(0, fetchShows ? 5 : 0)
           .map(s => ({ ...s, mediaType: 'tv' as const }))
         const merged = [...movies, ...shows]
           .sort((a, b) => b.popularity - a.popularity)
@@ -32,7 +43,7 @@ export const useHeroSlider = () => {
       .catch(() => { if (!cancelled) setItems([]) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [contentType])
 
   const fetchVideoForItem = useCallback(async (item: HeroItem) => {
     if (item.mediaType !== 'movie') {

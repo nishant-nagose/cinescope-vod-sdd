@@ -1,6 +1,7 @@
 import { useContentFilter } from '../context/ContentFilterContext'
 import { MovieCarousel } from '../components/MovieCarousel'
 import { ShowCarousel } from '../components/ShowCarousel'
+import { CAROUSEL_CONFIG } from '../config/carousels'
 import { HeroSlider } from '../components/HeroSlider'
 import { LazySection } from '../components/LazySection'
 import { useHeroSlider } from '../hooks/useHeroSlider'
@@ -99,6 +100,42 @@ export const HomePage = () => {
   const showMovies = contentType === 'movies' || contentType === 'all' || !contentType
   const showShows = contentType === 'shows' || contentType === 'all' || !contentType
 
+  const movieHookMap: Record<string, { movies: import('../types/tmdb').Movie[]; loading: boolean; error: string | null; refetch: () => void; hasMore: boolean; loadMore?: () => void }> = {
+    newReleases: { movies: newReleases.movies, loading: newReleases.loading, error: newReleases.error, refetch: newReleases.refetch, hasMore: newReleases.hasMore, loadMore: newReleases.fetchMore },
+    dailyTrending: { movies: dailyTrending.movies, loading: dailyTrending.loading, error: dailyTrending.error, refetch: dailyTrending.refetch, hasMore: false },
+    weeklyTrending: { movies: weeklyTrending.movies, loading: weeklyTrending.loading, error: weeklyTrending.error, refetch: weeklyTrending.refetch, hasMore: false },
+    trending: { movies: trending.movies, loading: trending.loading, error: trending.error, refetch: trending.refetch, hasMore: trending.hasMore, loadMore: trending.fetchMore },
+    acclaimed: { movies: acclaimed.movies, loading: acclaimed.loading, error: acclaimed.error, refetch: acclaimed.refetch, hasMore: acclaimed.hasMore, loadMore: acclaimed.fetchMore },
+    comedy: { movies: comedy.movies, loading: comedy.loading, error: comedy.error, refetch: comedy.refetch, hasMore: comedy.hasMore, loadMore: comedy.fetchMore },
+    sciFiFantasy: { movies: sciFiFantasy.movies, loading: sciFiFantasy.loading, error: sciFiFantasy.error, refetch: sciFiFantasy.refetch, hasMore: sciFiFantasy.hasMore, loadMore: sciFiFantasy.fetchMore },
+    realLife: { movies: realLife.movies, loading: realLife.loading, error: realLife.error, refetch: realLife.refetch, hasMore: realLife.hasMore, loadMore: realLife.fetchMore },
+    animation: { movies: animation.movies, loading: animation.loading, error: animation.error, refetch: animation.refetch, hasMore: animation.hasMore, loadMore: animation.fetchMore },
+    romance: { movies: romance.movies, loading: romance.loading, error: romance.error, refetch: romance.refetch, hasMore: romance.hasMore, loadMore: romance.fetchMore },
+    actionAdventure: { movies: actionAdventure.movies, loading: actionAdventure.loading, error: actionAdventure.error, refetch: actionAdventure.refetch, hasMore: actionAdventure.hasMore, loadMore: actionAdventure.fetchMore },
+    awardWinning: { movies: awardWinning.movies, loading: awardWinning.loading, error: awardWinning.error, refetch: awardWinning.refetch, hasMore: awardWinning.hasMore, loadMore: awardWinning.fetchMore },
+    inspiring: { movies: inspiring.movies, loading: inspiring.loading, error: inspiring.error, refetch: inspiring.refetch, hasMore: inspiring.hasMore, loadMore: inspiring.fetchMore },
+    thriller: { movies: thriller.movies, loading: thriller.loading, error: thriller.error, refetch: thriller.refetch, hasMore: thriller.hasMore, loadMore: thriller.fetchMore },
+    upcomingMovies: { movies: upcomingMoviesHook.movies, loading: upcomingMoviesHook.loading, error: upcomingMoviesHook.error, refetch: upcomingMoviesHook.refetch, hasMore: upcomingMoviesHook.hasMore, loadMore: upcomingMoviesHook.fetchMore },
+  }
+
+  const showHookMap: Record<string, { shows: import('../types/tmdb').TVShow[]; loading: boolean; error: string | null; refetch: () => void; hasMore: boolean; loadMore?: () => void }> = {
+    newShows: { shows: newShows.shows, loading: newShows.loading, error: newShows.error, refetch: newShows.refetch, hasMore: newShows.hasMore, loadMore: newShows.loadMore },
+    tvDailyTrending: { shows: tvDailyTrending.shows, loading: tvDailyTrending.loading, error: tvDailyTrending.error, refetch: tvDailyTrending.refetch, hasMore: false },
+    tvWeeklyTrending: { shows: tvWeeklyTrending.shows, loading: tvWeeklyTrending.loading, error: tvWeeklyTrending.error, refetch: tvWeeklyTrending.refetch, hasMore: false },
+    recommendedShows: { shows: recommendedShows.shows, loading: recommendedShows.loading, error: recommendedShows.error, refetch: recommendedShows.refetch, hasMore: recommendedShows.hasMore, loadMore: recommendedShows.loadMore },
+    criticallyAcclaimedShows: { shows: criticallyAcclaimedShows.shows, loading: criticallyAcclaimedShows.loading, error: criticallyAcclaimedShows.error, refetch: criticallyAcclaimedShows.refetch, hasMore: criticallyAcclaimedShows.hasMore, loadMore: criticallyAcclaimedShows.loadMore },
+    comedyShows: { shows: comedyShows.shows, loading: comedyShows.loading, error: comedyShows.error, refetch: comedyShows.refetch, hasMore: comedyShows.hasMore, loadMore: comedyShows.loadMore },
+    sciFiFantasyShows: { shows: sciFiFantasyShows.shows, loading: sciFiFantasyShows.loading, error: sciFiFantasyShows.error, refetch: sciFiFantasyShows.refetch, hasMore: sciFiFantasyShows.hasMore, loadMore: sciFiFantasyShows.loadMore },
+    realLifeShows: { shows: realLifeShows.shows, loading: realLifeShows.loading, error: realLifeShows.error, refetch: realLifeShows.refetch, hasMore: realLifeShows.hasMore, loadMore: realLifeShows.loadMore },
+    animationShows: { shows: animationShows.shows, loading: animationShows.loading, error: animationShows.error, refetch: animationShows.refetch, hasMore: animationShows.hasMore, loadMore: animationShows.loadMore },
+    romanceShows: { shows: romanceShows.shows, loading: romanceShows.loading, error: romanceShows.error, refetch: romanceShows.refetch, hasMore: romanceShows.hasMore, loadMore: romanceShows.loadMore },
+    actionAdventureShows: { shows: actionAdventureShows.shows, loading: actionAdventureShows.loading, error: actionAdventureShows.error, refetch: actionAdventureShows.refetch, hasMore: actionAdventureShows.hasMore, loadMore: actionAdventureShows.loadMore },
+    awardWinningShows: { shows: awardWinningShows.shows, loading: awardWinningShows.loading, error: awardWinningShows.error, refetch: awardWinningShows.refetch, hasMore: awardWinningShows.hasMore, loadMore: awardWinningShows.loadMore },
+    inspiringShows: { shows: inspiringShows.shows, loading: inspiringShows.loading, error: inspiringShows.error, refetch: inspiringShows.refetch, hasMore: inspiringShows.hasMore, loadMore: inspiringShows.loadMore },
+    thrillerShows: { shows: thrillerShows.shows, loading: thrillerShows.loading, error: thrillerShows.error, refetch: thrillerShows.refetch, hasMore: thrillerShows.hasMore, loadMore: thrillerShows.loadMore },
+    upcomingShows: { shows: upcomingShowsHook.shows, loading: upcomingShowsHook.loading, error: upcomingShowsHook.error, refetch: upcomingShowsHook.refetch, hasMore: upcomingShowsHook.hasMore, loadMore: upcomingShowsHook.loadMore },
+  }
+
   return (
     <div>
       <HeroSlider
@@ -118,8 +155,59 @@ export const HomePage = () => {
           </p>
         </div>
 
-        {/* Movie Carousels */}
-        {showMovies && (
+        {/* Carousels — driven by CAROUSEL_CONFIG (src/config/carousels.ts) */}
+        {CAROUSEL_CONFIG.map(config => {
+          const visible =
+            (config.type === 'movies' && showMovies) ||
+            (config.type === 'shows' && showShows) ||
+            config.type === 'both'
+          if (!visible) return null
+
+          if (config.type === 'movies') {
+            const hook = movieHookMap[config.hookKey]
+            if (!hook) return null
+            return (
+              <LazySection key={config.id}>
+                <MovieCarousel
+                  title={config.title}
+                  movies={hook.movies}
+                  loading={hook.loading}
+                  error={hook.error}
+                  onRetry={hook.refetch}
+                  singleRow
+                  rankDisplay={config.rankDisplay}
+                  maxItems={config.rankDisplay ? 10 : undefined}
+                  hasMore={config.rankDisplay ? false : hook.hasMore}
+                  onLoadMore={config.rankDisplay ? undefined : hook.loadMore}
+                />
+              </LazySection>
+            )
+          }
+
+          if (config.type === 'shows') {
+            const hook = showHookMap[config.hookKey]
+            if (!hook) return null
+            return (
+              <LazySection key={config.id}>
+                <ShowCarousel
+                  title={config.title}
+                  shows={hook.shows}
+                  loading={hook.loading}
+                  error={hook.error}
+                  onRetry={hook.refetch}
+                  rankDisplay={config.rankDisplay}
+                  hasMore={config.rankDisplay ? false : hook.hasMore}
+                  onLoadMore={config.rankDisplay ? undefined : hook.loadMore}
+                />
+              </LazySection>
+            )
+          }
+
+          return null
+        })}
+
+        {/* LEGACY PLACEHOLDER — remove after verifying config-driven rendering */}
+        {false && showMovies && (
           <>
             <LazySection>
               <MovieCarousel
@@ -320,8 +408,8 @@ export const HomePage = () => {
           </>
         )}
 
-        {/* Show Carousels */}
-        {showShows && (
+        {/* Show Carousels — legacy, disabled: config-driven rendering above handles this */}
+        {false && showShows && (
           <>
             <LazySection>
               <ShowCarousel

@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect, ReactNode } from 'react'
+import { memo, useRef, useEffect, useLayoutEffect, ReactNode } from 'react'
 import { TVShow } from '../types/tmdb'
 import { ShowCard } from './ShowCard'
 
@@ -43,6 +43,19 @@ export const ShowCarousel = memo(({
 }: ShowCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const scrollLeftRef = useRef(0)
+
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const onScroll = () => { scrollLeftRef.current = container.scrollLeft }
+    container.addEventListener('scroll', onScroll, { passive: true })
+    return () => container.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollLeft = scrollLeftRef.current
+  }, [shows])
 
   useEffect(() => {
     if (!onLoadMore || !hasMore || !sentinelRef.current) return
