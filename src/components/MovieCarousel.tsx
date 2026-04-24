@@ -50,6 +50,7 @@ export const MovieCarousel = memo(({
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const scrollLeftRef = useRef(0)
+  const prevMoviesLengthRef = useRef(0)
 
   useEffect(() => {
     const container = scrollRef.current
@@ -60,7 +61,17 @@ export const MovieCarousel = memo(({
   }, [])
 
   useLayoutEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollLeft = scrollLeftRef.current
+    if (!scrollRef.current) return
+    const prevLength = prevMoviesLengthRef.current
+    prevMoviesLengthRef.current = movies.length
+    if (prevLength > 0 && movies.length > prevLength) {
+      // Load more: content appended — restore saved position
+      scrollRef.current.scrollLeft = scrollLeftRef.current
+    } else {
+      // Initial load or filter reset — start from beginning
+      scrollRef.current.scrollLeft = 0
+      scrollLeftRef.current = 0
+    }
   }, [movies])
 
   useEffect(() => {
@@ -96,7 +107,7 @@ export const MovieCarousel = memo(({
         {titleExtra}
       </div>
 
-      {loading && (
+      {loading && movies.length === 0 && (
         <div className="px-3 sm:px-4 md:px-6 lg:px-8">
           <CarouselSkeleton />
         </div>
@@ -115,7 +126,7 @@ export const MovieCarousel = memo(({
         </div>
       )}
 
-      {!loading && !error && movies.length > 0 && (
+      {!error && movies.length > 0 && (
         <div className="relative group">
           <button
             onClick={() => scroll('left')}
@@ -146,6 +157,13 @@ export const MovieCarousel = memo(({
                   </div>
                 ))}
                 {hasMore && <div ref={sentinelRef} className="w-1 flex-shrink-0" />}
+                {loading && Array.from({ length: 4 }).map((_, i) => (
+                  <div key={`skel-${i}`} className="w-[150px] sm:w-[165px] md:w-[190px] lg:w-[210px] xl:w-[225px] flex-shrink-0">
+                    <div className="aspect-[2/3] bg-gray-700 rounded-lg animate-pulse" />
+                    <div className="mt-2 h-3 bg-gray-700 rounded animate-pulse w-3/4" />
+                    <div className="mt-1.5 h-3 bg-gray-700 rounded animate-pulse w-1/2" />
+                  </div>
+                ))}
               </div>
               {row2.length > 0 && (
                 <div className="flex gap-3 sm:gap-4">

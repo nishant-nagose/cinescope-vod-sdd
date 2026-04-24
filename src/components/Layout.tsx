@@ -1,145 +1,218 @@
-import { ReactNode, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { ReactNode, useState, useRef, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import cinescopeLogo from '../images/cinescope-logo.svg'
-import { SearchBar } from './SearchBar'
-import { ContentFilterBar } from './ContentFilterBar'
+import { RegionDropdown } from './RegionDropdown'
 import { useContentFilter } from '../context/ContentFilterContext'
+import { useGenres } from '../hooks/useGenres'
 
 interface LayoutProps {
   children: ReactNode
 }
 
-export const Layout = ({ children }: LayoutProps) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { contentType, setContentType } = useContentFilter()
+// ─── Pill button ─────────────────────────────────────────────────────────────
+const Pill = ({
+  label,
+  active,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) => (
+  <button
+    onClick={onClick}
+    className={`relative px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 select-none whitespace-nowrap ${
+      active
+        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-900/40 ring-1 ring-white/20'
+        : 'bg-white/8 text-gray-300 hover:bg-white/15 hover:text-white border border-white/10'
+    }`}
+  >
+    {label}
+  </button>
+)
 
-  const ContentToggle = () => (
-    <div className="flex rounded-lg overflow-hidden border border-gray-600 flex-shrink-0">
-      {(['movies', 'shows'] as const).map(type => (
-        <button
-          key={type}
-          onClick={() => setContentType(contentType === type ? 'all' : type)}
-          className={`px-3 py-1.5 text-xs font-medium transition-colors capitalize ${
-            contentType === type
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          {type.charAt(0).toUpperCase() + type.slice(1)}
-        </button>
-      ))}
-    </div>
-  )
+// ─── Layout ──────────────────────────────────────────────────────────────────
+export const Layout = ({ children }: LayoutProps) => {
+  const navigate = useNavigate()
+  const { contentType, setContentType, activeCategory, setActiveCategory } = useContentFilter()
+  const { data: genresData } = useGenres()
+
+  const [catOpen, setCatOpen] = useState(false)
+  const [pagesOpen, setPagesOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const catRef = useRef<HTMLDivElement>(null)
+  const pagesRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false)
+      if (pagesRef.current && !pagesRef.current.contains(e.target as Node)) setPagesOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
+  const toggleContent = (type: 'movies' | 'shows') => {
+    setContentType(contentType === type ? 'all' : type)
+  }
+
+  // Find the current category name for the pill label
+  const activeCategoryName = activeCategory
+    ? genresData?.genres.find(g => g.id === activeCategory)?.name
+    : null
+
+  const catLabel = activeCategoryName ? activeCategoryName : 'Categories'
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <header className="bg-gray-800 shadow-lg sticky top-0 z-50">
+      {/* ── Top header bar ──────────────────────────────────────────────────── */}
+      <header className="bg-gray-900/95 backdrop-blur-md border-b border-white/8 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          {/* Desktop: 4-zone CSS Grid — Logo | Search | Toggle | Nav+Filters */}
-          <div className="hidden lg:grid lg:items-center lg:h-16 lg:gap-3"
-            style={{ gridTemplateColumns: 'auto minmax(200px, 1fr) auto auto' }}
-          >
-            {/* Zone 1: Logo */}
+
+          {/* Desktop & tablet: Logo | spacer | RegionDropdown | SearchIcon */}
+          <div className="flex items-center justify-between h-14 gap-3">
             <Link to="/" className="flex items-center flex-shrink-0">
               <img src={cinescopeLogo} alt="CineScope" className="h-8 w-auto" />
             </Link>
 
-            {/* Zone 2: Search */}
-            <div className="w-full">
-              <SearchBar placeholder="🔍 Search movies, shows, genres..." className="w-full" />
-            </div>
-
-            {/* Zone 3: Content Toggle */}
-            <ContentToggle />
-
-            {/* Zone 4: Nav links [separator] Filter controls */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <nav className="flex items-center gap-4">
-                <Link to="/trending" className="text-sm hover:text-blue-400 transition-colors whitespace-nowrap">Trending</Link>
-                <Link to="/top-rated" className="text-sm hover:text-blue-400 transition-colors whitespace-nowrap">Top Rated</Link>
-                <Link to="/search" className="text-sm hover:text-blue-400 transition-colors whitespace-nowrap">Search</Link>
-              </nav>
-              <div className="border-l border-white/20 pl-3 ml-1">
-                <ContentFilterBar compact hideToggle />
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Region selector */}
+              <div className="hidden sm:block">
+                <RegionDropdown />
               </div>
-            </div>
-          </div>
 
-          {/* Tablet (md): Logo | Search | Toggle | ⋮ */}
-          <div className="hidden md:flex lg:hidden items-center h-14 gap-2">
-            <Link to="/" className="flex items-center flex-shrink-0">
-              <img src={cinescopeLogo} alt="CineScope" className="h-7 w-auto" />
-            </Link>
-            <div className="flex-1 mx-2">
-              <SearchBar placeholder="Search..." className="w-full" />
-            </div>
-            <ContentToggle />
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
-              aria-label="Toggle menu"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Mobile: Logo | search icon | hamburger */}
-          <div className="flex md:hidden items-center justify-between h-14">
-            <Link to="/" className="flex items-center flex-shrink-0">
-              <img src={cinescopeLogo} alt="CineScope" className="h-6 w-auto" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <Link to="/search" className="p-2 rounded-lg hover:bg-gray-700 transition-colors" aria-label="Search">
+              {/* Search icon → navigates to /search */}
+              <button
+                onClick={() => navigate('/search')}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+                aria-label="Search"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-              </Link>
+              </button>
+
+              {/* Mobile hamburger */}
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
-                aria-label="Toggle menu"
+                className="sm:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+                onClick={() => setMobileMenuOpen(o => !o)}
+                aria-label="Menu"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
             </div>
           </div>
 
-          {mobileMenuOpen && (
-            <nav className="border-t border-gray-700 py-3 space-y-1 lg:hidden">
-              <div className="px-4 py-2">
-                <ContentToggle />
-              </div>
-              <Link
-                to="/trending"
-                className="block px-4 py-2 hover:bg-gray-700 rounded-md transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Trending
-              </Link>
-              <Link
-                to="/top-rated"
-                className="block px-4 py-2 hover:bg-gray-700 rounded-md transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Top Rated
-              </Link>
-              <Link
-                to="/search"
-                className="block px-4 py-2 hover:bg-gray-700 rounded-md transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Search
-              </Link>
-              <div className="px-4 py-2">
-                <ContentFilterBar compact hideToggle />
-              </div>
-            </nav>
-          )}
+          {/* ── Pill navigation bar ─────────────────────────────────────────── */}
+          <div className="hidden sm:flex items-center gap-2 pb-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            {/* Shows pill */}
+            <Pill
+              label="Shows"
+              active={contentType === 'shows'}
+              onClick={() => toggleContent('shows')}
+            />
+
+            {/* Movies pill */}
+            <Pill
+              label="Movies"
+              active={contentType === 'movies'}
+              onClick={() => toggleContent('movies')}
+            />
+
+            {/* Categories pill + dropdown */}
+            <div className="relative" ref={catRef}>
+              <Pill
+                label={catLabel}
+                active={catOpen || activeCategory !== null}
+                onClick={() => setCatOpen(o => !o)}
+              />
+              {catOpen && genresData && (
+                <div className="absolute top-full left-0 mt-1 z-50 w-52 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden">
+                  <div className="max-h-64 overflow-y-auto py-1">
+                    <button
+                      onClick={() => { setActiveCategory(null); setCatOpen(false) }}
+                      className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                        activeCategory === null ? 'text-blue-400 bg-blue-600/10' : 'text-gray-200 hover:bg-white/10'
+                      }`}
+                    >
+                      All Categories
+                    </button>
+                    {genresData.genres.map(g => (
+                      <button
+                        key={g.id}
+                        onClick={() => { setActiveCategory(g.id); setCatOpen(false) }}
+                        className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                          activeCategory === g.id ? 'text-blue-400 bg-blue-600/10' : 'text-gray-200 hover:bg-white/10'
+                        }`}
+                      >
+                        {g.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pages pill + dropdown */}
+            <div className="relative" ref={pagesRef}>
+              <Pill
+                label="Pages"
+                active={pagesOpen}
+                onClick={() => setPagesOpen(o => !o)}
+              />
+              {pagesOpen && (
+                <div className="absolute top-full left-0 mt-1 z-50 w-44 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden py-1">
+                  <Link
+                    to="/trending"
+                    onClick={() => setPagesOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    Trending
+                  </Link>
+                  <Link
+                    to="/top-rated"
+                    onClick={() => setPagesOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    Top Rated
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* ── Mobile slide-down menu ──────────────────────────────────────── */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t border-white/8 bg-gray-900 px-4 py-3 space-y-2">
+            <RegionDropdown />
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Pill label="Shows"   active={contentType === 'shows'}  onClick={() => { toggleContent('shows');  setMobileMenuOpen(false) }} />
+              <Pill label="Movies"  active={contentType === 'movies'} onClick={() => { toggleContent('movies'); setMobileMenuOpen(false) }} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/trending"  onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Trending</Link>
+              <span className="text-gray-600">·</span>
+              <Link to="/top-rated" onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Top Rated</Link>
+            </div>
+            {genresData && (
+              <select
+                value={activeCategory ?? ''}
+                onChange={e => { setActiveCategory(e.target.value === '' ? null : Number(e.target.value)); setMobileMenuOpen(false) }}
+                className="w-full px-3 py-2 rounded-lg bg-white/10 text-gray-200 text-sm border border-white/10 focus:outline-none"
+                aria-label="Category"
+              >
+                <option value="">All Categories</option>
+                {genresData.genres.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
       </header>
 
       <main className="flex-1">
@@ -150,28 +223,21 @@ export const Layout = ({ children }: LayoutProps) => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
             <div className="flex flex-col items-start">
-              <img
-                src={cinescopeLogo}
-                alt="CineScope"
-                className="h-8 sm:h-10 w-auto mb-2"
-              />
-              <p className="text-xs sm:text-sm text-gray-400">
-                Your gateway to movie discoveries
-              </p>
+              <img src={cinescopeLogo} alt="CineScope" className="h-8 sm:h-10 w-auto mb-2" />
+              <p className="text-xs sm:text-sm text-gray-400">Your gateway to movie discoveries</p>
             </div>
             <div>
-              <h4 className="text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">Popular</h4>
+              <h4 className="text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">Explore</h4>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
-                <li><Link to="/trending" className="hover:text-blue-400 transition-colors">Trending</Link></li>
+                <li><Link to="/trending"  className="hover:text-blue-400 transition-colors">Trending</Link></li>
                 <li><Link to="/top-rated" className="hover:text-blue-400 transition-colors">Top Rated</Link></li>
-                <li><Link to="/search" className="hover:text-blue-400 transition-colors">Search</Link></li>
+                <li><Link to="/search"    className="hover:text-blue-400 transition-colors">Search</Link></li>
               </ul>
             </div>
             <div className="sm:col-span-2 lg:col-span-1">
               <h4 className="text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">About</h4>
               <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
                 <li><a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">TMDB API</a></li>
-                <li><a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">API Documentation</a></li>
               </ul>
             </div>
           </div>

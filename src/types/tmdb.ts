@@ -314,6 +314,7 @@ export interface CarouselConfig {
   type: 'movies' | 'shows' | 'both'
   hookKey: string
   rankDisplay: boolean
+  genreKey?: string   // matches GENRE_KEY_MAP; undefined = generic (always visible)
 }
 
 export interface OTTPlatform {

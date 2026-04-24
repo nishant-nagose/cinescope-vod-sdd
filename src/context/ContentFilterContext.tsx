@@ -1,12 +1,12 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 interface ContentFilterContextValue {
-  countries: string[]
-  languages: string[]
+  region: string | null          // null = global (no country filter)
+  countries: string[]            // derived: [region] or []
+  languages: string[]            // always [], language filter removed from UI
   contentType: 'movies' | 'shows' | 'all'
   activeCategory: number | null
-  setCountries: (v: string[]) => void
-  setLanguages: (v: string[]) => void
+  setRegion: (v: string | null) => void
   setContentType: (v: 'movies' | 'shows' | 'all') => void
   setActiveCategory: (v: number | null) => void
   filterKey: string
@@ -15,17 +15,35 @@ interface ContentFilterContextValue {
 const ContentFilterContext = createContext<ContentFilterContextValue | null>(null)
 
 export const ContentFilterProvider = ({ children }: { children: ReactNode }) => {
-  const [countries, setCountries] = useState<string[]>(['US'])
-  const [languages, setLanguages] = useState<string[]>(['en'])
+  const [region, setRegionState] = useState<string | null>(null)
   const [contentType, setContentType] = useState<'movies' | 'shows' | 'all'>('all')
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
 
-  const filterKey = `${countries.join(',')}-${languages.join(',')}-${contentType}-${activeCategory ?? 'all'}`
+  // Auto-detect region from IP on first load; only sets if user hasn't picked one yet
+  useEffect(() => {
+    fetch('https://ipapi.co/country/')
+      .then(r => r.text())
+      .then(code => {
+        const trimmed = code.trim()
+        if (/^[A-Z]{2}$/.test(trimmed)) {
+          setRegionState(prev => prev === null ? trimmed : prev)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const setRegion = (v: string | null) => setRegionState(v)
+
+  const countries = region ? [region] : []
+  const languages: string[] = []
+
+  const filterKey = `${region ?? 'global'}-${contentType}-${activeCategory ?? 'all'}`
 
   return (
     <ContentFilterContext.Provider value={{
-      countries, languages, contentType, activeCategory,
-      setCountries, setLanguages, setContentType, setActiveCategory,
+      region, countries, languages,
+      contentType, activeCategory,
+      setRegion, setContentType, setActiveCategory,
       filterKey,
     }}>
       {children}

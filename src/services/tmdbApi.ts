@@ -58,8 +58,11 @@ export const getTrendingMovies = async (
   page: number = 1,
   filter?: ContentFilterParams
 ): Promise<DiscoverResponse> => {
+  // Blockbusters: all-time crowd favourites ranked by popularity score
   return apiRequest('/discover/movie', {
     sort_by: 'popularity.desc',
+    'vote_count.gte': '500',
+    'vote_average.gte': '6',
     page: page.toString(),
     ...(filter ? buildFilterParams(filter) : {}),
   })
@@ -233,9 +236,12 @@ export const getAwardWinningMovies = async (
   page: number = 1,
   filter?: ContentFilterParams
 ): Promise<DiscoverResponse> => {
+  // Drama (18) + History (36) + Biography bias: prestige films with very high ratings & broad audience
   return apiRequest('/discover/movie', {
     sort_by: 'vote_average.desc',
-    'vote_count.gte': '500',
+    'vote_count.gte': '1000',
+    'vote_average.gte': '7.5',
+    with_genres: '18,36',
     page: page.toString(),
     ...(filter ? buildFilterParams(filter) : {}),
   })
@@ -386,9 +392,13 @@ export const getUpcomingShows = async (page: number = 1): Promise<TVShowListResp
 }
 
 export const getUpcomingMovies = async (page: number = 1): Promise<DiscoverResponse> => {
-  return apiRequest('/movie/upcoming', {
+  const today = new Date().toISOString().slice(0, 10)
+  const ninetyDaysLater = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  return apiRequest('/discover/movie', {
+    sort_by: 'primary_release_date.asc',
+    'primary_release_date.gte': today,
+    'primary_release_date.lte': ninetyDaysLater,
     page: page.toString(),
-    language: 'en-US',
   })
 }
 
