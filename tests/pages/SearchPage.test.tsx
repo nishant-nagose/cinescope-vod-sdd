@@ -21,7 +21,7 @@ vi.mock('../../src/context/ContentFilterContext', () => ({
 }))
 vi.mock('../../src/services/tmdbApi', () => ({
   getImageUrl: (path: string | null) => (path ? `https://img.tmdb.org${path}` : null),
-  searchMovies: vi.fn().mockResolvedValue({ results: [], page: 1, total_pages: 0, total_results: 0 }),
+  searchMulti: vi.fn().mockResolvedValue({ results: [], page: 1, total_pages: 0, total_results: 0 }),
 }))
 vi.mock('../../src/components/SearchBar', () => ({
   SearchBar: ({ onSearch }: { onSearch: (q: string) => void }) => (
@@ -43,7 +43,7 @@ describe('SearchPage', () => {
 
   test('shows prompt when query is empty', () => {
     render(<SearchPage />)
-    expect(screen.getByText('Enter a movie title to start searching.')).toBeInTheDocument()
+    expect(screen.getByText('Enter a title to start searching.')).toBeInTheDocument()
   })
 
   test('shows InfiniteScrollTrigger in place of pagination', () => {

@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
-import cinescopeLogo from '../images/cinescope-logo-black.png'
+import cinescopeLogo from '../images/cinescope-logo.svg'
 import { SearchBar } from './SearchBar'
 import { ContentFilterBar } from './ContentFilterBar'
 

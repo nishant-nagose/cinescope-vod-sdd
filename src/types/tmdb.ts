@@ -143,6 +143,118 @@ export interface TmdbLanguage {
 export interface ContentFilterParams {
   countries: string[]
   languages: string[]
+  contentType?: 'movies' | 'shows' | 'all'
+  activeCategory?: number | null
+}
+
+// ---- TV Show Types ----
+
+export interface TVShow {
+  id: number
+  name: string
+  original_name: string
+  overview: string
+  poster_path: string | null
+  backdrop_path: string | null
+  vote_average: number
+  vote_count: number
+  popularity: number
+  first_air_date: string
+  origin_country: string[]
+  original_language: string
+  genre_ids: number[]
+  media_type?: 'tv'
+}
+
+export interface Network {
+  id: number
+  name: string
+  logo_path: string | null
+  origin_country: string
+}
+
+export interface EpisodeSummary {
+  id: number
+  name: string
+  episode_number: number
+  season_number: number
+  air_date: string | null
+}
+
+export interface SeasonSummary {
+  id: number
+  name: string
+  season_number: number
+  episode_count: number
+  air_date: string | null
+  poster_path: string | null
+  overview: string
+}
+
+export interface Episode {
+  id: number
+  name: string
+  episode_number: number
+  season_number: number
+  overview: string
+  air_date: string | null
+  still_path: string | null
+  vote_average: number
+  vote_count: number
+  runtime: number | null
+}
+
+export interface SeasonDetails {
+  id: number
+  name: string
+  season_number: number
+  air_date: string | null
+  poster_path: string | null
+  overview: string
+  episodes: Episode[]
+}
+
+export interface TVShowDetails extends Omit<TVShow, 'genre_ids'> {
+  genres: Genre[]
+  tagline: string
+  status: string
+  type: string
+  number_of_seasons: number
+  number_of_episodes: number
+  seasons: SeasonSummary[]
+  networks: Network[]
+  production_companies: ProductionCompany[]
+  episode_run_time: number[]
+  homepage: string
+  in_production: boolean
+  languages: string[]
+  last_air_date: string
+  last_episode_to_air: EpisodeSummary | null
+  next_episode_to_air: EpisodeSummary | null
+}
+
+export interface TVShowListResponse {
+  page: number
+  results: TVShow[]
+  total_pages: number
+  total_results: number
+}
+
+export interface Person {
+  id: number
+  name: string
+  media_type: 'person'
+}
+
+export type SearchMovieItem = Movie & { media_type: 'movie' }
+export type SearchShowItem = TVShow & { media_type: 'tv' }
+export type ContentSearchItem = SearchMovieItem | SearchShowItem
+
+export interface MultiSearchResult {
+  page: number
+  results: (SearchMovieItem | SearchShowItem | Person)[]
+  total_pages: number
+  total_results: number
 }
 
 export interface MovieVideo {

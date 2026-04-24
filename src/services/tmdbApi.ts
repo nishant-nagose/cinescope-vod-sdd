@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { Movie, GenresResponse, DiscoverResponse, TmdbCountry, TmdbLanguage, ContentFilterParams, MovieVideosResponse, WatchProvidersResponse, PersonMovieCredits } from '../types/tmdb'
+import type { Movie, GenresResponse, DiscoverResponse, TmdbCountry, TmdbLanguage, ContentFilterParams, MovieVideosResponse, WatchProvidersResponse, PersonMovieCredits, TVShow, TVShowDetails, TVShowListResponse, SeasonDetails, CreditsResponse, MultiSearchResult } from '../types/tmdb'
 
 const TMDB_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.themoviedb.org/3'
 const TMDB_IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p'
@@ -264,3 +264,162 @@ export const getThrillerMovies = async (
     ...(filter ? buildFilterParams(filter) : {}),
   })
 }
+
+// ---- TV Show API Functions ----
+
+const buildTVFilterParams = (filter: ContentFilterParams): Record<string, string> => {
+  const params: Record<string, string> = {}
+  const lang = filter.languages[0] ?? ''
+  const country = filter.countries[0] ?? ''
+  if (lang) params['language'] = lang
+  if (country) params['with_origin_country'] = country
+  return params
+}
+
+export const getTrendingTVDaily = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/trending/tv/day', {
+    page: page.toString(),
+    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : { language: 'en-US' }),
+  })
+}
+
+export const getTrendingTVWeekly = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/trending/tv/week', {
+    page: page.toString(),
+    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : { language: 'en-US' }),
+  })
+}
+
+export const getTopRatedTV = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/tv/top_rated', {
+    page: page.toString(),
+    language: filter?.languages[0] ?? 'en-US',
+    ...(filter?.countries[0] ? { region: filter.countries[0] } : {}),
+  })
+}
+
+export const getNewShows = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  const today = new Date().toISOString().slice(0, 10)
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  return apiRequest('/discover/tv', {
+    sort_by: 'first_air_date.desc',
+    'first_air_date.lte': today,
+    'first_air_date.gte': ninetyDaysAgo,
+    'vote_count.gte': '10',
+    page: page.toString(),
+    ...(filter ? buildTVFilterParams(filter) : {}),
+  })
+}
+
+export const getRecommendedShows = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/discover/tv', {
+    sort_by: 'popularity.desc',
+    'vote_count.gte': '100',
+    'vote_average.gte': '7',
+    page: page.toString(),
+    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+  })
+}
+
+export const getCriticallyAcclaimedShows = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/discover/tv', {
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '200',
+    'vote_average.gte': '8',
+    page: page.toString(),
+    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+  })
+}
+
+export const getShowsByGenre = async (
+  genreId: number | string,
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/discover/tv', {
+    with_genres: genreId.toString(),
+    sort_by: 'popularity.desc',
+    'vote_count.gte': '50',
+    page: page.toString(),
+    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+  })
+}
+
+export const getAwardWinningShows = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> => {
+  return apiRequest('/discover/tv', {
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '500',
+    'vote_average.gte': '8',
+    page: page.toString(),
+    ...(filter ? { language: filter.languages[0] ?? 'en-US' } : {}),
+  })
+}
+
+export const getUpcomingShows = async (page: number = 1): Promise<TVShowListResponse> => {
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  return apiRequest('/discover/tv', {
+    sort_by: 'first_air_date.asc',
+    'first_air_date.gte': tomorrow,
+    page: page.toString(),
+  })
+}
+
+export const getUpcomingMovies = async (page: number = 1): Promise<DiscoverResponse> => {
+  return apiRequest('/movie/upcoming', {
+    page: page.toString(),
+    language: 'en-US',
+  })
+}
+
+export const getShowDetails = async (id: number): Promise<TVShowDetails> => {
+  return apiRequest(`/tv/${id}`, { language: 'en-US' })
+}
+
+export const getShowCredits = async (id: number): Promise<CreditsResponse> => {
+  return apiRequest(`/tv/${id}/credits`, { language: 'en-US' })
+}
+
+export const getSimilarShows = async (
+  id: number,
+  page: number = 1
+): Promise<TVShowListResponse> => {
+  return apiRequest(`/tv/${id}/similar`, { page: page.toString(), language: 'en-US' })
+}
+
+export const getSeasonDetails = async (
+  showId: number,
+  seasonNumber: number
+): Promise<SeasonDetails> => {
+  return apiRequest(`/tv/${showId}/season/${seasonNumber}`, { language: 'en-US' })
+}
+
+export const searchMulti = async (
+  query: string,
+  page: number = 1
+): Promise<MultiSearchResult> => {
+  return apiRequest('/search/multi', { query, page: page.toString(), language: 'en-US' })
+}
+
+// suppress unused import warning — TVShow is used by callers via re-export
+export type { TVShow }

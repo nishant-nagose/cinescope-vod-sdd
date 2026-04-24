@@ -1,34 +1,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useContentFilter } from '../context/ContentFilterContext'
-import { Movie, DiscoverResponse, ContentFilterParams } from '../types/tmdb'
+import { TVShow, TVShowListResponse, ContentFilterParams } from '../types/tmdb'
 
-interface UseInfiniteMoviesResult {
-  movies: Movie[]
+interface UseInfiniteShowsResult {
+  shows: TVShow[]
   loading: boolean
   error: string | null
   hasMore: boolean
-  fetchMore: () => void
+  loadMore: () => void
   refetch: () => void
 }
 
-export const useInfiniteMovies = (
-  fetcher: (page: number, filter: ContentFilterParams) => Promise<DiscoverResponse>,
+export const useInfiniteShows = (
+  fetcher: (page: number, filter: ContentFilterParams) => Promise<TVShowListResponse>,
   _options?: { cacheKeyPrefix: string }
-): UseInfiniteMoviesResult => {
+): UseInfiniteShowsResult => {
   const { countries, languages, filterKey } = useContentFilter()
-  const [movies, setMovies] = useState<Movie[]>([])
+  const [shows, setShows] = useState<TVShow[]>([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fetchingPage = useRef(0)
-  // Keep a stable ref to the latest fetcher so inline lambdas in callers
-  // don't cause a new effect run on every HomePage re-render.
-  const fetcherRef = useRef(fetcher)
-  fetcherRef.current = fetcher
 
   useEffect(() => {
-    setMovies([])
+    setShows([])
     setPage(1)
     setHasMore(true)
     setError(null)
@@ -43,15 +39,15 @@ export const useInfiniteMovies = (
     const load = async () => {
       setLoading(true)
       try {
-        const data = await fetcherRef.current(page, { countries, languages })
+        const data = await fetcher(page, { countries, languages })
         if (!cancelled) {
-          setMovies(prev => page === 1 ? data.results : [...prev, ...data.results])
+          setShows(prev => page === 1 ? data.results : [...prev, ...data.results])
           setHasMore(page < data.total_pages)
           setError(null)
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load movies')
+          setError(err instanceof Error ? err.message : 'Failed to load shows')
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -60,20 +56,18 @@ export const useInfiniteMovies = (
 
     load()
     return () => { cancelled = true }
-  }, [page, filterKey, countries, languages])  // fetcher intentionally omitted — use fetcherRef
+  }, [page, filterKey, fetcher, countries, languages])
 
-  const fetchMore = useCallback(() => {
-    if (!loading && hasMore) {
-      setPage(prev => prev + 1)
-    }
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) setPage(prev => prev + 1)
   }, [loading, hasMore])
 
   const refetch = useCallback(() => {
-    setMovies([])
+    setShows([])
     setPage(1)
     setHasMore(true)
     fetchingPage.current = 0
   }, [])
 
-  return { movies, loading, error, hasMore, fetchMore, refetch }
+  return { shows, loading, error, hasMore, loadMore, refetch }
 }

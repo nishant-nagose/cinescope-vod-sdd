@@ -1,18 +1,15 @@
 import { memo, useRef, useEffect, ReactNode } from 'react'
-import { Movie } from '../types/tmdb'
-import { MovieCard } from './MovieCard'
-import { RankedMovieCard } from './RankedMovieCard'
+import { TVShow } from '../types/tmdb'
+import { ShowCard } from './ShowCard'
 
-interface MovieCarouselProps {
+interface ShowCarouselProps {
   title: string
   titleExtra?: ReactNode
-  movies: Movie[]
+  shows: TVShow[]
   loading?: boolean
   error?: string | null
   onRetry?: () => void
-  emptyMessage?: string
   rankDisplay?: boolean
-  maxItems?: number
   singleRow?: boolean
   hasMore?: boolean
   onLoadMore?: () => void
@@ -33,20 +30,17 @@ const CarouselSkeleton = () => (
   </div>
 )
 
-export const MovieCarousel = memo(({
+export const ShowCarousel = memo(({
   title,
   titleExtra,
-  movies,
+  shows,
   loading,
   error,
   onRetry,
-  emptyMessage: _emptyMessage = 'No movies available for this section.',
-  rankDisplay = false,
-  maxItems,
-  singleRow = false,
+  singleRow = true,
   hasMore = false,
   onLoadMore,
-}: MovieCarouselProps) => {
+}: ShowCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -60,9 +54,8 @@ export const MovieCarousel = memo(({
     return () => observer.disconnect()
   }, [onLoadMore, hasMore])
 
-  const displayMovies = maxItems != null ? movies.slice(0, maxItems) : movies
-  const row1 = (singleRow || rankDisplay) ? displayMovies : displayMovies.slice(0, 10)
-  const row2 = (singleRow || rankDisplay) ? [] : displayMovies.slice(10, 20)
+  // Empty carousels are not rendered (FR-018)
+  if (!loading && !error && shows.length === 0) return null
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return
@@ -72,9 +65,6 @@ export const MovieCarousel = memo(({
       behavior: 'smooth',
     })
   }
-
-  // Empty carousels are not rendered (FR-018)
-  if (!loading && !error && movies.length === 0) return null
 
   return (
     <section aria-label={title} className="mb-8 sm:mb-10 md:mb-12">
@@ -102,7 +92,7 @@ export const MovieCarousel = memo(({
         </div>
       )}
 
-      {!loading && !error && movies.length > 0 && (
+      {!loading && !error && shows.length > 0 && (
         <div className="relative group">
           <button
             onClick={() => scroll('left')}
@@ -121,32 +111,16 @@ export const MovieCarousel = memo(({
           >
             <div className={`${singleRow ? 'flex' : 'flex flex-col'} gap-3 sm:gap-4 w-max`}>
               <div className="flex gap-3 sm:gap-4">
-                {row1.map((movie, i) => (
+                {shows.map(show => (
                   <div
-                    key={movie.id}
+                    key={show.id}
                     className="w-[150px] sm:w-[165px] md:w-[190px] lg:w-[210px] xl:w-[225px] flex-shrink-0"
                   >
-                    {rankDisplay ? (
-                      <RankedMovieCard movie={movie} rank={i + 1} />
-                    ) : (
-                      <MovieCard movie={movie} />
-                    )}
+                    <ShowCard show={show} />
                   </div>
                 ))}
                 {hasMore && <div ref={sentinelRef} className="w-1 flex-shrink-0" />}
               </div>
-              {row2.length > 0 && (
-                <div className="flex gap-3 sm:gap-4">
-                  {row2.map(movie => (
-                    <div
-                      key={movie.id}
-                      className="w-[150px] sm:w-[165px] md:w-[190px] lg:w-[210px] xl:w-[225px] flex-shrink-0"
-                    >
-                      <MovieCard movie={movie} />
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
