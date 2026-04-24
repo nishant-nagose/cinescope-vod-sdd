@@ -1,33 +1,75 @@
 import { useInfiniteMovies } from '../hooks/useInfiniteMovies'
-import { getTrendingMovies } from '../services/tmdbApi'
+import { useInfiniteShows } from '../hooks/useInfiniteShows'
+import { getTrendingMovies, getTrendingTVWeekly } from '../services/tmdbApi'
 import { MovieGrid } from '../components/MovieGrid'
+import { ShowGrid } from '../components/ShowGrid'
 import { InfiniteScrollTrigger } from '../components/InfiniteScrollTrigger'
+import { useContentFilter } from '../context/ContentFilterContext'
 
 export const TrendingPage = () => {
-  const { movies, loading, error, hasMore, fetchMore, refetch } = useInfiniteMovies(
+  const { contentType } = useContentFilter()
+
+  const movieData = useInfiniteMovies(
     getTrendingMovies,
-    { cacheKeyPrefix: 'trending-infinite' }
+    { cacheKeyPrefix: 'trending-page-movies' }
   )
+  const showData = useInfiniteShows(
+    (page, filter) => getTrendingTVWeekly(page, filter),
+    { cacheKeyPrefix: 'trending-page-shows' }
+  )
+
+  const showingShows  = contentType === 'shows'
+  const showingMovies = contentType !== 'shows'  // 'movies' or 'all' → show movies
+  const showingBoth   = contentType === 'all'
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">Trending Movies</h1>
-        <p className="text-xs sm:text-sm md:text-base text-gray-400">Discover the most popular movies this week</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+          Trending {showingBoth ? 'Movies & Shows' : showingShows ? 'Shows' : 'Movies'}
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-400">
+          Discover the most popular {showingBoth ? 'content' : showingShows ? 'shows' : 'movies'} this week
+        </p>
       </div>
 
-      <MovieGrid
-        movies={movies}
-        loading={loading && movies.length === 0}
-        error={error}
-        onRetry={refetch}
-      />
+      {showingMovies && (
+        <>
+          {showingBoth && (
+            <h2 className="text-lg font-semibold text-white mb-4">Movies</h2>
+          )}
+          <MovieGrid
+            movies={movieData.movies}
+            loading={movieData.loading && movieData.movies.length === 0}
+            error={movieData.error}
+            onRetry={movieData.refetch}
+          />
+          <InfiniteScrollTrigger
+            onIntersect={movieData.fetchMore}
+            hasMore={movieData.hasMore}
+            loading={movieData.loading}
+          />
+        </>
+      )}
 
-      <InfiniteScrollTrigger
-        onIntersect={fetchMore}
-        hasMore={hasMore}
-        loading={loading}
-      />
+      {showingShows && (
+        <>
+          {showingBoth && (
+            <h2 className="text-lg font-semibold text-white mb-4 mt-8">Shows</h2>
+          )}
+          <ShowGrid
+            shows={showData.shows}
+            loading={showData.loading && showData.shows.length === 0}
+            error={showData.error}
+            onRetry={showData.refetch}
+          />
+          <InfiniteScrollTrigger
+            onIntersect={showData.loadMore}
+            hasMore={showData.hasMore}
+            loading={showData.loading}
+          />
+        </>
+      )}
     </div>
   )
 }

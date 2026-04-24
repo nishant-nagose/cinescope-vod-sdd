@@ -1,0 +1,27 @@
+// Maps TMDB genre IDs (movie + TV) to internal genreKey strings used in CAROUSEL_CONFIG.
+// Multiple genre IDs can map to the same key (e.g. Action=28 and Adventure=12 → 'action').
+export const GENRE_KEY_MAP: Record<number, string> = {
+  28:    'action',      // Action (movie)
+  12:    'action',      // Adventure (movie)
+  10759: 'action',      // Action & Adventure (TV)
+  35:    'comedy',      // Comedy (movie + TV)
+  16:    'animation',   // Animation (movie + TV)
+  10765: 'scifi',       // Sci-Fi & Fantasy (TV)
+  878:   'scifi',       // Science Fiction (movie)
+  14:    'scifi',       // Fantasy (movie)
+  10749: 'romance',     // Romance (movie + TV)
+  18:    'drama',       // Drama (movie + TV)
+  10768: 'drama',       // War & Politics (TV)
+  53:    'thriller',    // Thriller (movie)
+  9648:  'thriller',    // Mystery (TV)
+  36:    'documentary', // History (movie)
+  99:    'documentary', // Documentary (movie)
+  10764: 'documentary', // Reality (TV)
+  10763: 'documentary', // News (TV)
+  10751: 'family',      // Family (movie + TV)
+  10762: 'animation',   // Kids (TV)
+  80:    'thriller',    // Crime (movie)
+  27:    'thriller',    // Horror (movie)
+  37:    'drama',       // Western (movie)
+  10402: 'drama',       // Music (movie)
+}

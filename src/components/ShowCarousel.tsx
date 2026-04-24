@@ -1,6 +1,7 @@
 import { memo, useRef, useEffect, useLayoutEffect, ReactNode } from 'react'
 import { TVShow } from '../types/tmdb'
 import { ShowCard } from './ShowCard'
+import { RankedShowCard } from './RankedShowCard'
 
 interface ShowCarouselProps {
   title: string
@@ -10,6 +11,7 @@ interface ShowCarouselProps {
   error?: string | null
   onRetry?: () => void
   rankDisplay?: boolean
+  maxItems?: number
   singleRow?: boolean
   hasMore?: boolean
   onLoadMore?: () => void
@@ -37,13 +39,17 @@ export const ShowCarousel = memo(({
   loading,
   error,
   onRetry,
+  rankDisplay = false,
+  maxItems,
   singleRow = true,
   hasMore = false,
   onLoadMore,
 }: ShowCarouselProps) => {
+  const displayShows = maxItems != null ? shows.slice(0, maxItems) : shows
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const scrollLeftRef = useRef(0)
+  const prevShowsLengthRef = useRef(0)
 
   useEffect(() => {
     const container = scrollRef.current
@@ -54,7 +60,17 @@ export const ShowCarousel = memo(({
   }, [])
 
   useLayoutEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollLeft = scrollLeftRef.current
+    if (!scrollRef.current) return
+    const prevLength = prevShowsLengthRef.current
+    prevShowsLengthRef.current = shows.length
+    if (prevLength > 0 && shows.length > prevLength) {
+      // Load more: content appended — restore saved position
+      scrollRef.current.scrollLeft = scrollLeftRef.current
+    } else {
+      // Initial load or filter reset — start from beginning
+      scrollRef.current.scrollLeft = 0
+      scrollLeftRef.current = 0
+    }
   }, [shows])
 
   useEffect(() => {
@@ -86,7 +102,7 @@ export const ShowCarousel = memo(({
         {titleExtra}
       </div>
 
-      {loading && (
+      {loading && shows.length === 0 && (
         <div className="px-3 sm:px-4 md:px-6 lg:px-8">
           <CarouselSkeleton />
         </div>
@@ -105,7 +121,7 @@ export const ShowCarousel = memo(({
         </div>
       )}
 
-      {!loading && !error && shows.length > 0 && (
+      {!error && shows.length > 0 && (
         <div className="relative group">
           <button
             onClick={() => scroll('left')}
@@ -123,15 +139,26 @@ export const ShowCarousel = memo(({
           >
             <div className={`${singleRow ? 'flex' : 'flex flex-col'} gap-3 sm:gap-4 w-max`}>
               <div className="flex gap-3 sm:gap-4">
-                {shows.map(show => (
+                {displayShows.map((show, i) => (
                   <div
                     key={show.id}
                     className="w-[150px] sm:w-[165px] md:w-[190px] lg:w-[210px] xl:w-[225px] flex-shrink-0"
                   >
-                    <ShowCard show={show} />
+                    {rankDisplay ? (
+                      <RankedShowCard show={show} rank={i + 1} />
+                    ) : (
+                      <ShowCard show={show} />
+                    )}
                   </div>
                 ))}
                 {hasMore && <div ref={sentinelRef} className="w-1 flex-shrink-0" />}
+                {loading && Array.from({ length: 4 }).map((_, i) => (
+                  <div key={`skel-${i}`} className="w-[150px] sm:w-[165px] md:w-[190px] lg:w-[210px] xl:w-[225px] flex-shrink-0">
+                    <div className="aspect-[2/3] bg-gray-700 rounded-lg animate-pulse" />
+                    <div className="mt-2 h-3 bg-gray-700 rounded animate-pulse w-3/4" />
+                    <div className="mt-1.5 h-3 bg-gray-700 rounded animate-pulse w-1/2" />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
