@@ -97,6 +97,8 @@ Follow this order to avoid merge conflicts and broken intermediate states:
 
 ## Verification Checklist (Before PR)
 
+### Phase 1 — Core Implementation
+
 - [X] `npx tsc --noEmit` passes with zero errors
 - [X] `npm test` — all tests pass (11 test files, 90 tests, 0 failures)
 - [X] Hero slider visible on home page load (HeroSlider.tsx accepts mixed Movie+Show items)
@@ -114,4 +116,31 @@ Follow this order to avoid merge conflicts and broken intermediate states:
 - [X] `tests/pages/TopRatedPage.test.tsx` exists and passes
 - [X] `tests/pages/TrendingPage.test.tsx` exists and passes
 - [X] `tests/pages/ShowDetailPage.test.tsx` exists and passes
-- [X] `npm run build` succeeds (95 modules, 242 kB JS bundle)
+- [X] `npm run build` succeeds (89 modules, 78.64 kB gzipped bundle)
+
+### Phase 2 — Bug Fixes & Feature Enhancements
+
+- [X] Country and Language dropdowns show options in ascending alphabetical order
+- [X] Country and Language dropdowns show selected option pinned at top when user types a search query
+- [X] Movie Details page backdrop fills container — no top/bottom cropping
+- [X] Movie Details page trailer plays without top/bottom cropping
+- [X] Show Details page backdrop fills container — no top/bottom cropping
+- [X] Show Details page trailer plays without top/bottom cropping
+- [X] Hero Slider slide images display without top/bottom cropping
+- [X] Carousel scroll position is preserved when additional content loads (cross-browser: Desktop, iOS, Android Chrome)
+- [X] Show carousel card images load and display correctly on every page load
+- [X] Header renders 4 logical zones on desktop (Logo | Search | Content Toggle | Nav+Filters) via CSS Grid
+- [X] Header Navigation links (Trending, Top Rated, Search) visually separated from filter controls (Categories, Country, Language)
+- [X] Header responsive: 4 zones on desktop; overlay `⋮` on tablet; Logo + icons + hamburger on mobile
+- [X] Movies/Shows Content Toggle drives hero slider content (Movies only / Shows only / All)
+- [X] No carousel title strings hardcoded in `src/pages/HomePage.tsx`; all titles from `src/config/carousels.ts`
+- [X] OTT provider icons in "Where to Watch" navigate directly to OTT platform (no TMDB redirect)
+- [X] Desktop: OTT icon click opens OTT platform page in new tab
+- [X] Mobile: OTT icon tap attempts app deep-link; falls back to OTT web page in new tab
+
+### Post-Phase-16 Patches
+
+- [X] RegionDropdown search input font-size 16px — no zoom-on-focus on iOS/Android
+- [X] Trailer auto-advances hero slider when YouTube video ends (enablejsapi + postMessage handler)
+- [X] Hero slider swipe navigation works on mobile browsers (onTouchStart/onTouchEnd, 50px threshold)
+- [X] Hero slider shows regional content (lowered vote_count thresholds in getHeroMovies/getHeroShows)

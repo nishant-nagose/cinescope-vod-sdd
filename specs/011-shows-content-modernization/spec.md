@@ -2,8 +2,8 @@
 
 **Feature Branch**: `021-shows-modernization`  
 **Created**: 2026-04-23  
-**Updated**: 2026-04-24  
-**Status**: Updated  
+**Updated**: 2026-04-25  
+**Status**: Fully Implemented ✅  
 **Input**: User description: "Create new spec for shows-content-modernization of application"
 
 ## Clarifications
@@ -230,10 +230,11 @@ A user visiting any page of the application sees the correct premium CineScope l
 
 - **FR-001**: System MUST display a full-width, visually dominant hero slider at the top of the home page.
 - **FR-002**: Hero slider MUST support both Movies and Shows as content types.
-- **FR-003**: Hero slider MUST show only Top, Trending, and Upcoming content, limited to a maximum of 10 items.
+- **FR-003**: Hero slider MUST show only Top, Trending, and Upcoming content, limited to a maximum of 10 items. Regional content MUST be prioritised when a region filter is active; vote-count thresholds used to filter hero candidates MUST be low enough to include content from small-market regions (not just globally popular titles).
+- **FR-003a**: When a hero slider trailer finishes playing, the slider MUST automatically advance to the next item. A 2.5-minute fallback timer MUST also trigger advancement in case the video-end event is not received.
 - **FR-004**: Hero slider MUST be responsive and scale correctly on all screen sizes (mobile, tablet, desktop).
 - **FR-005**: System MUST remove all static/hardcoded logic that previously caused the hero slider to be invisible.
-- **FR-005a**: Hero slider MUST auto-rotate through items on a timed interval. Rotation MUST pause when the user hovers over the slider. Users MUST be able to manually advance or go back using navigation arrows or swipe gestures.
+- **FR-005a**: Hero slider MUST auto-rotate through items on a timed interval. Rotation MUST pause when the user hovers over the slider. Users MUST be able to manually advance or go back using navigation arrows, dot indicators, or horizontal swipe gestures. Swipe threshold MUST be at least 50px to prevent accidental triggers from taps or minor finger movement.
 - **FR-038**: Hero Slider Banner MUST display images without cropping the top or bottom; the full image dimensions MUST be preserved regardless of screen size.
 - **FR-051**: Hero Slider content MUST reflect the current Movies/Shows Content Toggle selection — Movies only, Shows only, or both when neither toggle is active.
 
@@ -265,6 +266,7 @@ A user visiting any page of the application sees the correct premium CineScope l
 
 - **FR-035**: Country and Language dropdowns MUST display currently selected options as visible and highlighted within the dropdown list when the user types a search query inside the dropdown. Selected options MUST NOT be hidden by the search filter.
 - **FR-036**: Country and Language dropdown options MUST be displayed in ascending alphabetical order at all times (both in the full list and in filtered/search results).
+- **FR-056**: All dropdown search `<input>` fields MUST use a font-size of at least 16px to prevent automatic page zoom on iOS Safari and Android Chrome when the input receives focus. The visual presentation may use smaller rendered text, but the underlying font-size attribute must not fall below 16px.
 
 **Home Page — Show Carousels**
 

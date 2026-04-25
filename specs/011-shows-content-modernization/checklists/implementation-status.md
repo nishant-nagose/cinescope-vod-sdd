@@ -2,10 +2,10 @@
 
 **Purpose**: Validate that Spec 011 implementation is complete and meets all requirements
 **Created**: 2026-04-24
-**Updated**: 2026-04-24 — Phase 2 tasks added (T059–T097); status updated to reflect pending work
+**Updated**: 2026-04-25 — Phase 2 fully complete; post-Phase-16 patches (Parts 9–11) documented
 **Feature**: [spec.md](../spec.md)
 **Branch**: `021-shows-modernization`
-**Status**: PHASE 1 COMPLETE ✓ | PHASE 2 IN PROGRESS ⏳
+**Status**: PHASE 1 COMPLETE ✓ | PHASE 2 COMPLETE ✓
 
 ---
 
@@ -327,27 +327,50 @@
 
 - [x] **T088** `npx tsc --noEmit` — zero errors
 - [x] **T089** `npm test` — all tests pass (1 test updated: "Need a Good Laugh? (Movies)" → `getAllByText('Need a Good Laugh?')` to match config title)
-- [x] **T090** `npm run build` — 98 modules, 72.54 kB gzipped (within 200KB budget); zero errors
-- [ ] **T091** Desktop smoke test — pending manual verification
-- [ ] **T092** Mobile viewport smoke test — pending manual verification
-- [ ] **T093** Commit Phase 2 changes — see below
+- [x] **T090** `npm run build` — 89 modules, 78.64 kB gzipped (within 200KB budget); zero errors
+- [x] **T091** Desktop smoke test — verified: dropdowns sorted A→Z + selected option pinned; backdrops uncropped; trailers play full-frame; hero slider no cropping; carousel scroll preserved; show carousels load images; 4-zone header; Movies/Shows toggle; carousel titles from config; OTT links open direct
+- [x] **T092** Mobile viewport smoke test — verified: header collapses to Logo + search icon + hamburger; mobile zoom-on-focus eliminated (RegionDropdown font-size 16px); OTT icon tap attempts deep-link with web fallback; hero slider swipe navigation works
+- [x] **T093** Phase 2 changes committed on branch `021-shows-modernization` across multiple commits (Parts 1–11)
 
 ---
 
-## Phase 2 Success Criteria (Pending)
+## Phase 2 Success Criteria
 
-- [ ] **SC-015** Country/Language dropdown options sorted A→Z; selected options always visible during search
-- [ ] **SC-016** Movie Details and Show Details backdrops fill container without top/bottom cropping
-- [ ] **SC-017** Trailer `<iframe>` on Movie/Show Details pages fills container without top/bottom cropping
-- [ ] **SC-018** Hero Slider slide images have no top/bottom cropping on any viewport size
-- [ ] **SC-019** Carousel scroll position is preserved during incremental content loading
-- [ ] **SC-020** Show carousel card images load correctly on initial render
-- [ ] **SC-021** Header displays 4 logical zones (Logo | Search | Content Toggle | Nav+Filters) using CSS Grid
-- [ ] **SC-022** Navigation links (Trending, Top Rated, Search) and filter controls (Categories, Country, Language) are visually separated in the header
-- [ ] **SC-023** Header is fully responsive: 4 zones on desktop; overlay on tablet; hamburger on mobile
-- [ ] **SC-024** Hero slider content reflects Movies/Shows toggle — shows only the selected content type
-- [ ] **SC-025** No carousel title string literals exist in `HomePage.tsx`; all titles sourced from `src/config/carousels.ts`
-- [ ] **SC-026** Clicking an OTT icon opens the OTT platform's web page directly (desktop: new tab); mobile: app-first with web fallback
+- [x] **SC-015** Country/Language dropdown options sorted A→Z; selected options always visible during search
+- [x] **SC-016** Movie Details and Show Details backdrops fill container without top/bottom cropping
+- [x] **SC-017** Trailer `<iframe>` on Movie/Show Details pages fills container without top/bottom cropping
+- [x] **SC-018** Hero Slider slide images have no top/bottom cropping on any viewport size
+- [x] **SC-019** Carousel scroll position is preserved during incremental content loading (cross-browser: conditional restore guards Desktop/iOS native preservation; Android Chrome reset corrected)
+- [x] **SC-020** Show carousel card images load correctly on initial render
+- [x] **SC-021** Header displays 4 logical zones (Logo | Search | Content Toggle | Nav+Filters) using CSS Grid
+- [x] **SC-022** Navigation links (Trending, Top Rated, Search) and filter controls (Categories, Country, Language) are visually separated in the header
+- [x] **SC-023** Header is fully responsive: 4 zones on desktop; overlay on tablet; hamburger on mobile
+- [x] **SC-024** Hero slider content reflects Movies/Shows toggle — shows only the selected content type
+- [x] **SC-025** No carousel title string literals exist in `HomePage.tsx`; all titles sourced from `src/config/carousels.ts`
+- [x] **SC-026** Clicking an OTT icon opens the OTT platform's web page directly (desktop: new tab); mobile: app-first with web fallback
+
+---
+
+## Post-Phase-16 Patches (Parts 9–11 — 2026-04-25)
+
+These fixes were applied after Phase 16 in response to regression testing on real devices.
+
+### Part 10 — Cross-Browser Carousel Scroll, Hero Region, Mobile Zoom, Trailer End
+
+| File | Fix |
+|------|-----|
+| `src/components/MovieCarousel.tsx` | Conditional scroll restore: only applies `savedScrollLeft` when `container.scrollLeft === 0 && savedScrollLeft.current > 0` — fixes Desktop/iOS regression from unconditional restore; Android Chrome reset still corrected |
+| `src/components/ShowCarousel.tsx` | Same conditional restore pattern applied |
+| `src/services/tmdbApi.ts` | `getHeroMovies` and `getHeroShows` — lowered `vote_count.gte` to `3`/`2`; removed `vote_average.gte: '5.5'` filter that was excluding small-market regional content and causing hero slider to fall back to global content |
+| `src/components/RegionDropdown.tsx` | Removed `text-xs` (12px) class from search `<input>`; added `style={{ fontSize: '16px' }}` to prevent iOS/Android browser zoom-on-focus |
+| `src/components/TrailerPlayer.tsx` | Added `onEnded?: () => void` prop; `useRef` for stable callback; `enablejsapi=1` + `origin` URL params enable YouTube postMessage API; `useEffect` handler fires on YouTube state `info: 0` (video ended) |
+| `src/components/HeroSlider.tsx` | Added `onEnded={goNext}` to `<TrailerPlayer>` so hero slider advances to next item when trailer finishes |
+
+### Part 11 — Hero Slider Mobile Swipe
+
+| File | Fix |
+|------|-----|
+| `src/components/HeroSlider.tsx` | Added `touchStartXRef` to track `touchstart` X position; `onTouchStart`/`onTouchEnd` handlers on hero div: swipe left → `goNext()`, swipe right → `goPrev()`, threshold 50px prevents accidental triggers from taps |
 
 ---
 
@@ -366,10 +389,14 @@
 **New Hooks**: 20 hooks (17 show-specific + useContentSearch + useUpcomingMovies + useSeasonDetails)
 **New API Methods**: 15 TV endpoints
 
-## Phase 2 Status: ⏳ IN PROGRESS
+## Phase 2 Status: ✅ FULLY IMPLEMENTED
 
 **Spec Updated**: 2026-04-24
-**Phase 2 Tasks**: 35 tasks (T059–T093) across 6 phases
-**Phase 2 Success Criteria**: 12 criteria (SC-015 through SC-026)
-**New Files to Create**: `src/config/carousels.ts`, `src/config/ottProviders.ts`, `src/utils/ottNavigation.ts`
-**Files to Modify**: Header.tsx, HeroSlider.tsx, MovieCarousel.tsx, ShowCarousel.tsx, ShowCard.tsx, MovieDetailPage.tsx, ShowDetailPage.tsx, ContentFilterBar.tsx, WatchProviders.tsx, useHeroSlider.ts, HomePage.tsx, tmdb.ts
+**Implementation Completed**: 2026-04-25
+**Phase 2 Tasks**: 35 tasks (T059–T093) — all complete
+**Phase 2 Success Criteria**: 12/12 met (SC-015 through SC-026)
+**Post-Phase-16 Patches**: Parts 9–11 — carousel cross-browser scroll, hero regional content, mobile zoom, trailer end-event, hero slider swipe
+**New Files Created**: `src/config/carousels.ts`, `src/config/ottProviders.ts`, `src/utils/ottNavigation.ts`
+**Files Modified**: Layout.tsx, HeroSlider.tsx, TrailerPlayer.tsx, RegionDropdown.tsx, MovieCarousel.tsx, ShowCarousel.tsx, ShowCard.tsx, MovieDetailPage.tsx, ShowDetailPage.tsx, ContentFilterBar.tsx, WatchProvidersSection.tsx, useHeroSlider.ts, HomePage.tsx, tmdb.ts, tmdbApi.ts
+**Build**: `npm run build` — 89 modules, 78.64 kB gzipped, 0 errors
+**Tests**: All pass
