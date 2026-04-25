@@ -332,7 +332,9 @@ export const getInspiringMovies = async (
 ): Promise<DiscoverResponse> => {
   return apiRequest('/discover/movie', {
     with_genres: '18,10751',
-    sort_by: 'popularity.desc',
+    without_genres: '10749',   // exclude Romance — prevents romantic dramas from appearing
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '200',
     page: page.toString(),
     ...(filter ? buildFilterParams(filter) : {}),
   })
@@ -349,6 +351,18 @@ export const getThrillerMovies = async (
     ...(filter ? buildFilterParams(filter) : {}),
   })
 }
+
+// Generic discover functions — used by the dynamic carousel pool
+export const discoverMovies = async (
+  extraParams: Record<string, string>,
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> =>
+  apiRequest('/discover/movie', {
+    page: page.toString(),
+    ...extraParams,
+    ...(filter ? buildFilterParams(filter) : {}),
+  })
 
 // ---- TV Show API Functions ----
 
@@ -459,6 +473,17 @@ export const getShowsByGenre = async (
     ...(filter ? buildTVFilterParams(filter) : {}),
   })
 }
+
+export const discoverTV = async (
+  extraParams: Record<string, string>,
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<TVShowListResponse> =>
+  apiRequest('/discover/tv', {
+    page: page.toString(),
+    ...extraParams,
+    ...(filter ? buildTVFilterParams(filter) : {}),
+  })
 
 export const getAwardWinningShows = async (
   page: number = 1,
