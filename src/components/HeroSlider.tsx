@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { getImageUrl, getMovieVideos } from '../services/tmdbApi'
+import { getImageUrl, getMovieVideos, getShowVideos } from '../services/tmdbApi'
 import { TrailerPlayer } from './TrailerPlayer'
 import { HeroItem } from '../hooks/useHeroSlider'
 
@@ -20,22 +20,25 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
   const [currentVideoKey, setCurrentVideoKey] = useState<string | null>(null)
   const [muted, setMuted] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const videoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const videoCache = useRef<Map<string, string | null>>(new Map())
+  const intervalRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const videoTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const trailerAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const videoCache        = useRef<Map<string, string | null>>(new Map())
 
   const current = items[Math.min(activeIndex, Math.max(0, items.length - 1))]
   const isMovie = current?.mediaType === 'movie'
-  const isTrailerPlaying = !!currentVideoKey && isMovie
+  // Trailers supported for both movies and TV shows
+  const isTrailerPlaying = !!currentVideoKey
 
-  // Reset to slide 0 when a new batch of items arrives (filter changed)
+  // Reset to slide 0 when items change (filter/region changed)
   useEffect(() => {
     setActiveIndex(0)
     setCurrentVideoKey(null)
-    if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+    if (videoTimerRef.current)     clearTimeout(videoTimerRef.current)
+    if (trailerAdvanceRef.current) clearTimeout(trailerAdvanceRef.current)
   }, [items])
 
-  // 10s auto-advance — stops while trailer is playing or user is hovering
+  // 10s auto-advance — paused while trailer is playing or mouse is hovering
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (items.length === 0 || isPaused || isTrailerPlaying) return
@@ -45,21 +48,29 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [items.length, isPaused, isTrailerPlaying])
 
-  // Fetch trailer for movie slides — show after 5-second hold
+  // Fetch trailer for current slide (movie OR TV show) — show after 5s hold
   useEffect(() => {
-    if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+    if (videoTimerRef.current)     clearTimeout(videoTimerRef.current)
+    if (trailerAdvanceRef.current) clearTimeout(trailerAdvanceRef.current)
     setCurrentVideoKey(null)
 
     if (!items.length || activeIndex >= items.length) return
     const item = items[activeIndex]
-    if (!item || item.mediaType !== 'movie') return
+    if (!item) return
 
-    const cacheKey = `hero-${item.id}`
+    // Cache key includes media type so movie/show with same id don't collide
+    const cacheKey = `hero-${item.id}-${item.mediaType}`
 
     const scheduleVideo = (key: string | null) => {
-      if (key) {
-        videoTimerRef.current = setTimeout(() => setCurrentVideoKey(key), 5000)
-      }
+      if (!key) return
+      videoTimerRef.current = setTimeout(() => {
+        setCurrentVideoKey(key)
+        // Auto-advance after 2.5 min in case YouTube doesn't fire an end event
+        trailerAdvanceRef.current = setTimeout(() => {
+          setCurrentVideoKey(null)
+          setActiveIndex(prev => (prev + 1) % items.length)
+        }, 150_000)
+      }, 5000)
     }
 
     if (videoCache.current.has(cacheKey)) {
@@ -68,7 +79,11 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
     }
 
     let cancelled = false
-    getMovieVideos(item.id)
+    const fetchVideos = item.mediaType === 'movie'
+      ? getMovieVideos(item.id)
+      : getShowVideos(item.id)
+
+    fetchVideos
       .then(response => {
         const trailer = response.results.find(
           v => v.site === 'YouTube' && v.type === 'Trailer' && v.official
@@ -81,12 +96,14 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
 
     return () => {
       cancelled = true
-      if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+      if (videoTimerRef.current)     clearTimeout(videoTimerRef.current)
+      if (trailerAdvanceRef.current) clearTimeout(trailerAdvanceRef.current)
     }
   }, [activeIndex, items])
 
   const goTo = useCallback((index: number) => {
-    if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+    if (videoTimerRef.current)     clearTimeout(videoTimerRef.current)
+    if (trailerAdvanceRef.current) clearTimeout(trailerAdvanceRef.current)
     setCurrentVideoKey(null)
     setActiveIndex(index)
   }, [])
