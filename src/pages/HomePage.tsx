@@ -157,9 +157,9 @@ export const HomePage = () => {
             config.type === 'both'
           if (!typeVisible) return null
 
-          // Category filter: carousels without genreKey are always visible (generic);
-          // carousels with genreKey are hidden unless they match the selected genre.
-          if (activeGenreKey !== null && config.genreKey && config.genreKey !== activeGenreKey) return null
+          // When a category is active, only show carousels whose genreKey matches exactly.
+          // Generic carousels (no genreKey) are also hidden so all visible content matches the selection.
+          if (activeGenreKey !== null && config.genreKey !== activeGenreKey) return null
 
           const title = getCarouselTitle(config.hookKey, config.type)
           const countFromTitle = extractCountFromTitle(title)
