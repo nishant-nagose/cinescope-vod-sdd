@@ -71,6 +71,8 @@ export const Layout = ({ children }: LayoutProps) => {
   const [catOpen, setCatOpen] = useState(false)
   const [pagesOpen, setPagesOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileCatOpen, setMobileCatOpen] = useState(false)
+  const [mobilePagesOpen, setMobilePagesOpen] = useState(false)
   const catRef = useRef<HTMLDivElement>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
 
@@ -262,12 +264,14 @@ export const Layout = ({ children }: LayoutProps) => {
 
         {/* ── Mobile slide-down menu ──────────────────────────────────────── */}
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-white/8 bg-gray-900 px-4 py-3 space-y-2">
+          <div className="sm:hidden border-t border-white/8 bg-gray-900 px-4 py-3 space-y-3">
             <RegionDropdown />
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+
+            {/* Pill row */}
+            <div className="flex flex-wrap items-center gap-2">
               {isFiltered && (
                 <button
-                  onClick={() => { clearFilters(); setMobileMenuOpen(false) }}
+                  onClick={() => { clearFilters(); setMobileMenuOpen(false); setMobileCatOpen(false); setMobilePagesOpen(false) }}
                   className="flex items-center justify-center w-7 h-7 rounded-full bg-white/15 border border-white/25 text-white hover:bg-white/25 transition-colors flex-shrink-0"
                   aria-label="Clear filters"
                 >
@@ -282,26 +286,63 @@ export const Layout = ({ children }: LayoutProps) => {
               {(!isFiltered || contentType === 'movies') && (
                 <Pill label="Movies" active={contentType === 'movies'} onClick={() => { toggleContent('movies'); setMobileMenuOpen(false) }} />
               )}
+              {/* Categories pill — always visible */}
+              <Pill
+                label={catLabel}
+                active={mobileCatOpen || activeCategory !== null}
+                onClick={() => { setMobileCatOpen(o => !o); setMobilePagesOpen(false) }}
+              />
+              {/* Pages pill — hidden when any filter active */}
+              {!isFiltered && (
+                <Pill
+                  label="Pages"
+                  active={mobilePagesOpen}
+                  onClick={() => { setMobilePagesOpen(o => !o); setMobileCatOpen(false) }}
+                />
+              )}
             </div>
-            {!isFiltered && (
-              <div className="flex flex-wrap gap-2">
-                <Link to="/trending"  onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Trending</Link>
-                <span className="text-gray-600">·</span>
-                <Link to="/top-rated" onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Top Rated</Link>
+
+            {/* Categories inline list */}
+            {mobileCatOpen && genresData && (
+              <div className="rounded-xl border border-white/15 overflow-hidden bg-gray-800/60">
+                <div className="max-h-52 overflow-y-auto">
+                  <button
+                    onClick={() => { setActiveCategory(null); setMobileCatOpen(false) }}
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${activeCategory === null ? 'text-blue-400 bg-blue-600/10' : 'text-gray-200 hover:bg-white/10'}`}
+                  >
+                    All Categories
+                  </button>
+                  {genresData.genres.map(g => (
+                    <button
+                      key={g.id}
+                      onClick={() => { setActiveCategory(g.id); setMobileCatOpen(false); setMobileMenuOpen(false) }}
+                      className={`w-full text-left px-3 py-2 text-sm transition-colors ${activeCategory === g.id ? 'text-blue-400 bg-blue-600/10' : 'text-gray-200 hover:bg-white/10'}`}
+                    >
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
-            {genresData && (
-              <select
-                value={activeCategory ?? ''}
-                onChange={e => { setActiveCategory(e.target.value === '' ? null : Number(e.target.value)); setMobileMenuOpen(false) }}
-                className="w-full px-3 py-2 rounded-lg bg-white/10 text-gray-200 text-sm border border-white/10 focus:outline-none"
-                aria-label="Category"
-              >
-                <option value="">All Categories</option>
-                {genresData.genres.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
-              </select>
+
+            {/* Pages inline list */}
+            {mobilePagesOpen && (
+              <div className="rounded-xl border border-white/15 overflow-hidden bg-gray-800/60">
+                <Link
+                  to="/trending"
+                  onClick={() => { setMobileMenuOpen(false); setMobilePagesOpen(false) }}
+                  className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Trending
+                </Link>
+                <Link
+                  to="/top-rated"
+                  onClick={() => { setMobileMenuOpen(false); setMobilePagesOpen(false) }}
+                  className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Top Rated
+                </Link>
+              </div>
             )}
           </div>
         )}
