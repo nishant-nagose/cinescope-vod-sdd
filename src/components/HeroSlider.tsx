@@ -28,6 +28,7 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
   const isHeroVisibleRef  = useRef(true)
   const activeIndexRef    = useRef(activeIndex)
   const itemsRef          = useRef(items)
+  const touchStartXRef    = useRef<number | null>(null)
 
   // Keep refs current so the IntersectionObserver callback always sees latest state
   activeIndexRef.current = activeIndex
@@ -178,6 +179,14 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
       className="relative w-full overflow-hidden bg-gray-900 aspect-video max-h-[85vh] min-h-[300px]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={e => { touchStartXRef.current = e.touches[0].clientX }}
+      onTouchEnd={e => {
+        if (touchStartXRef.current === null) return
+        const delta = e.changedTouches[0].clientX - touchStartXRef.current
+        touchStartXRef.current = null
+        if (Math.abs(delta) < 50) return
+        if (delta < 0) goNext(); else goPrev()
+      }}
     >
       {isTrailerPlaying ? (
         <div className="absolute inset-0">
