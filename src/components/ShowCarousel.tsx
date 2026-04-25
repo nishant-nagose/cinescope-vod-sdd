@@ -49,19 +49,31 @@ export const ShowCarousel = memo(({
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const prevShowsLengthRef = useRef(0)
+  const savedScrollLeft = useRef(0)
   const loadingRef = useRef(loading ?? false)
   loadingRef.current = loading ?? false
 
   useLayoutEffect(() => {
-    if (!scrollRef.current) return
+    const container = scrollRef.current
+    if (!container) return
     const prevLength = prevShowsLengthRef.current
     prevShowsLengthRef.current = shows.length
-    // Only reset to start on filter-reset (items removed) — browsers naturally
-    // preserve scrollLeft when content is appended to the right.
     if (shows.length === 0 || shows.length < prevLength) {
-      scrollRef.current.scrollLeft = 0
+      container.scrollLeft = 0
+      savedScrollLeft.current = 0
+    } else if (shows.length > prevLength && prevLength > 0) {
+      // Android Chrome resets scrollLeft on DOM mutation; restore the saved position.
+      container.scrollLeft = savedScrollLeft.current
     }
   }, [shows])
+
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const onScroll = () => { savedScrollLeft.current = container.scrollLeft }
+    container.addEventListener('scroll', onScroll, { passive: true })
+    return () => container.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!onLoadMore || !hasMore || !sentinelRef.current) return
