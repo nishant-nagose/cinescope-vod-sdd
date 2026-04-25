@@ -49,32 +49,20 @@ export const MovieCarousel = memo(({
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const scrollLeftRef = useRef(0)
   const prevMoviesLengthRef = useRef(0)
   const loadingRef = useRef(loading ?? false)
   loadingRef.current = loading ?? false
-
-  useEffect(() => {
-    const container = scrollRef.current
-    if (!container) return
-    const onScroll = () => { scrollLeftRef.current = container.scrollLeft }
-    container.addEventListener('scroll', onScroll, { passive: true })
-    return () => container.removeEventListener('scroll', onScroll)
-  }, [])
 
   useLayoutEffect(() => {
     if (!scrollRef.current) return
     const prevLength = prevMoviesLengthRef.current
     prevMoviesLengthRef.current = movies.length
-    if (movies.length > prevLength && prevLength > 0) {
-      // More items appended — hold user's scroll position
-      scrollRef.current.scrollLeft = scrollLeftRef.current
-    } else if (movies.length < prevLength || prevLength === 0) {
-      // Filter reset or initial load — start from beginning
+    // Only reset to start on filter-reset (items removed) — browsers naturally
+    // preserve scrollLeft when content is appended to the right, so the growth
+    // case needs no explicit set and setting it would race the smooth-scroll.
+    if (movies.length === 0 || movies.length < prevLength) {
       scrollRef.current.scrollLeft = 0
-      scrollLeftRef.current = 0
     }
-    // movies.length === prevLength → same data re-render, do nothing
   }, [movies])
 
   useEffect(() => {

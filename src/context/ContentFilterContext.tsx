@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react'
 
 interface ContentFilterContextValue {
   region: string | null          // null = global (no country filter)
@@ -51,6 +51,8 @@ const detectCountryCode = async (): Promise<string | null> => {
   return null
 }
 
+const EMPTY: string[] = []
+
 export const ContentFilterProvider = ({ children }: { children: ReactNode }) => {
   const [region, setRegionState] = useState<string | null>(null)
   const [contentType, setContentType] = useState<'movies' | 'shows' | 'all'>('all')
@@ -67,8 +69,8 @@ export const ContentFilterProvider = ({ children }: { children: ReactNode }) => 
 
   const setRegion = (v: string | null) => setRegionState(v)
 
-  const countries = region ? [region] : []
-  const languages: string[] = []
+  const countries = useMemo<string[]>(() => (region ? [region] : []), [region])
+  const languages: string[] = EMPTY
 
   const filterKey = `${region ?? 'global'}-${contentType}-${activeCategory ?? 'all'}`
 
