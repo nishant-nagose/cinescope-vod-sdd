@@ -576,6 +576,153 @@ const GENRE_SHOW_EXCLUDE: Record<string, string> = {
 }
 
 /**
+ * Builds a region-first carousel set: "streaming in region" carousels + genre angles.
+ * Prepended to the global pool in HomePage when a region is detected.
+ */
+export const buildRegionalPool = (
+  region: string,
+  contentType: 'movies' | 'shows' | 'all'
+): DynamicCarouselConfig[] => {
+  const pool: DynamicCarouselConfig[] = []
+
+  if (contentType !== 'shows') {
+    pool.push(
+      {
+        id: 'reg-popular-m',
+        title: 'Popular Movies in Your Region',
+        type: 'movies',
+        fetch: mv({ sort_by: 'popularity.desc', 'vote_count.gte': '10' }),
+      },
+      {
+        id: 'reg-new-m',
+        title: 'New Releases in Your Region',
+        type: 'movies',
+        fetch: mvd(() => ({
+          sort_by: 'release_date.desc',
+          'primary_release_date.gte': ago(60),
+          'primary_release_date.lte': today(),
+          'vote_count.gte': '3',
+        })),
+      },
+      {
+        id: 'reg-top-m',
+        title: 'Top Rated Movies in Your Region',
+        type: 'movies',
+        fetch: mv({ sort_by: 'vote_average.desc', 'vote_count.gte': '50' }),
+      },
+      {
+        id: 'reg-action-m',
+        title: 'Action Films from Your Region',
+        type: 'movies',
+        genreKey: 'action',
+        fetch: mv({ with_genres: '28|12', sort_by: 'popularity.desc' }),
+      },
+      {
+        id: 'reg-drama-m',
+        title: 'Drama Films from Your Region',
+        type: 'movies',
+        genreKey: 'drama',
+        fetch: mv({ with_genres: '18', without_genres: '10749', sort_by: 'vote_average.desc', 'vote_count.gte': '30' }),
+      },
+      {
+        id: 'reg-comedy-m',
+        title: 'Comedy Films from Your Region',
+        type: 'movies',
+        genreKey: 'comedy',
+        fetch: mv({ with_genres: '35', sort_by: 'popularity.desc' }),
+      },
+      {
+        id: `local-cinema-${region}`,
+        title: 'Local Cinema',
+        type: 'movies',
+        fetch: (page, f) => discoverMovies(
+          { with_origin_country: region, sort_by: 'popularity.desc', 'vote_count.gte': '10' },
+          page, { ...f, countries: [] }
+        ),
+      },
+      {
+        id: `local-top-films-${region}`,
+        title: 'Top Rated Local Films',
+        type: 'movies',
+        fetch: (page, f) => discoverMovies(
+          { with_origin_country: region, sort_by: 'vote_average.desc', 'vote_count.gte': '50' },
+          page, { ...f, countries: [] }
+        ),
+      },
+    )
+  }
+
+  if (contentType !== 'movies') {
+    pool.push(
+      {
+        id: 'reg-popular-s',
+        title: 'Popular Shows in Your Region',
+        type: 'shows',
+        fetch: sh({ sort_by: 'popularity.desc', 'vote_count.gte': '10' }),
+      },
+      {
+        id: 'reg-new-s',
+        title: 'New Shows in Your Region',
+        type: 'shows',
+        fetch: shd(() => ({
+          sort_by: 'first_air_date.desc',
+          'first_air_date.gte': ago(60),
+          'first_air_date.lte': today(),
+          'vote_count.gte': '3',
+        })),
+      },
+      {
+        id: 'reg-top-s',
+        title: 'Top Rated Shows in Your Region',
+        type: 'shows',
+        fetch: sh({ sort_by: 'vote_average.desc', 'vote_count.gte': '30' }),
+      },
+      {
+        id: 'reg-drama-s',
+        title: 'Drama Series from Your Region',
+        type: 'shows',
+        genreKey: 'drama',
+        fetch: sh({ with_genres: '18', without_genres: '10749', sort_by: 'vote_average.desc', 'vote_count.gte': '20' }),
+      },
+      {
+        id: 'reg-comedy-s',
+        title: 'Comedy Shows from Your Region',
+        type: 'shows',
+        genreKey: 'comedy',
+        fetch: sh({ with_genres: '35', sort_by: 'popularity.desc', 'vote_count.gte': '10' }),
+      },
+      {
+        id: 'reg-action-s',
+        title: 'Action Shows from Your Region',
+        type: 'shows',
+        genreKey: 'action',
+        fetch: sh({ with_genres: '10759', sort_by: 'popularity.desc', 'vote_count.gte': '10' }),
+      },
+      {
+        id: `local-shows-${region}`,
+        title: 'Local TV Shows',
+        type: 'shows',
+        fetch: (page, f) => discoverTV(
+          { with_origin_country: region, sort_by: 'popularity.desc', 'vote_count.gte': '10' },
+          page, { ...f, countries: [] }
+        ),
+      },
+      {
+        id: `local-top-shows-${region}`,
+        title: 'Acclaimed Local Shows',
+        type: 'shows',
+        fetch: (page, f) => discoverTV(
+          { with_origin_country: region, sort_by: 'vote_average.desc', 'vote_count.gte': '30' },
+          page, { ...f, countries: [] }
+        ),
+      },
+    )
+  }
+
+  return pool
+}
+
+/**
  * Builds a rich set of carousels for a single genre, covering multiple angles
  * (popular, top-rated, new releases, hidden gems, classics).
  * Used by HomePage when a category filter is active.

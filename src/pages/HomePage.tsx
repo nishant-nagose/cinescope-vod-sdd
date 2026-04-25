@@ -3,7 +3,7 @@ import { useContentFilter } from '../context/ContentFilterContext'
 import { HeroSlider } from '../components/HeroSlider'
 import { LazySection } from '../components/LazySection'
 import { DynamicCarousel } from '../components/DynamicCarousel'
-import { CAROUSEL_POOL, buildGenrePool } from '../config/carouselPool'
+import { CAROUSEL_POOL, buildGenrePool, buildRegionalPool } from '../config/carouselPool'
 import { GENRE_KEY_MAP } from '../utils/genreKeyMap'
 import { useHeroSlider } from '../hooks/useHeroSlider'
 
@@ -12,23 +12,31 @@ const LOAD_BATCH = 6
 
 export const HomePage = () => {
   const heroSlider = useHeroSlider()
-  const { contentType, activeCategory } = useContentFilter()
+  const { contentType, activeCategory, region } = useContentFilter()
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const activeGenreKey = activeCategory !== null ? (GENRE_KEY_MAP[activeCategory] ?? null) : null
 
-  // When a genre is active, generate a rich multi-angle pool for that genre.
-  // Otherwise, filter the global pool by content type only.
+  // Genre active → rich multi-angle genre pool.
+  // Region active → regional carousels first, then global pool.
+  // Default → global pool filtered by content type.
   const activePool = useMemo(() => {
     if (activeGenreKey !== null) {
       return buildGenrePool(activeGenreKey, contentType)
     }
-    return CAROUSEL_POOL.filter(config =>
+
+    const globalPool = CAROUSEL_POOL.filter(config =>
       (config.type === 'movies' && (contentType === 'movies' || contentType === 'all')) ||
       (config.type === 'shows'  && (contentType === 'shows'  || contentType === 'all'))
     )
-  }, [activeGenreKey, contentType])
+
+    if (region) {
+      return [...buildRegionalPool(region, contentType), ...globalPool]
+    }
+
+    return globalPool
+  }, [activeGenreKey, contentType, region])
 
   const visiblePool = activePool.slice(0, visibleCount)
   const hasMoreCarousels = visibleCount < activePool.length
@@ -36,7 +44,7 @@ export const HomePage = () => {
   // Reset visible count whenever the filter selection changes
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE)
-  }, [contentType, activeCategory])
+  }, [contentType, activeCategory, region])
 
   // Load more carousels when the page-bottom sentinel enters the viewport
   useEffect(() => {

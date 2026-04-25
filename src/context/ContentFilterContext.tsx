@@ -14,6 +14,43 @@ interface ContentFilterContextValue {
 
 const ContentFilterContext = createContext<ContentFilterContextValue | null>(null)
 
+// Wraps fetch with an abort-based timeout so slow/hung services don't block the chain
+const fetchWithTimeout = async (url: string, ms = 5000): Promise<Response> => {
+  const ac = new AbortController()
+  const id = setTimeout(() => ac.abort(), ms)
+  try {
+    return await fetch(url, { signal: ac.signal })
+  } finally {
+    clearTimeout(id)
+  }
+}
+
+// Try multiple geolocation services in order; return first valid 2-letter country code
+const detectCountryCode = async (): Promise<string | null> => {
+  // 1. api.country.is — CORS-friendly JSON service, no rate limit
+  try {
+    const r = await fetchWithTimeout('https://api.country.is/')
+    const d: { country?: string } = await r.json()
+    if (d.country && /^[A-Z]{2}$/.test(d.country)) return d.country
+  } catch {}
+
+  // 2. ipapi.co plain-text endpoint (existing, may be rate-limited)
+  try {
+    const r = await fetchWithTimeout('https://ipapi.co/country/')
+    const t = (await r.text()).trim()
+    if (/^[A-Z]{2}$/.test(t)) return t
+  } catch {}
+
+  // 3. freeipapi.com — free JSON service, no auth required
+  try {
+    const r = await fetchWithTimeout('https://freeipapi.com/api/json')
+    const d: { countryCode?: string } = await r.json()
+    if (d.countryCode && /^[A-Z]{2}$/.test(d.countryCode)) return d.countryCode
+  } catch {}
+
+  return null
+}
+
 export const ContentFilterProvider = ({ children }: { children: ReactNode }) => {
   const [region, setRegionState] = useState<string | null>(null)
   const [contentType, setContentType] = useState<'movies' | 'shows' | 'all'>('all')
@@ -21,15 +58,11 @@ export const ContentFilterProvider = ({ children }: { children: ReactNode }) => 
 
   // Auto-detect region from IP on first load; only sets if user hasn't picked one yet
   useEffect(() => {
-    fetch('https://ipapi.co/country/')
-      .then(r => r.text())
-      .then(code => {
-        const trimmed = code.trim()
-        if (/^[A-Z]{2}$/.test(trimmed)) {
-          setRegionState(prev => prev === null ? trimmed : prev)
-        }
-      })
-      .catch(() => {})
+    let cancelled = false
+    detectCountryCode().then(code => {
+      if (!cancelled && code) setRegionState(prev => prev === null ? code : prev)
+    })
+    return () => { cancelled = true }
   }, [])
 
   const setRegion = (v: string | null) => setRegionState(v)
