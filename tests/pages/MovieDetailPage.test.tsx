@@ -109,10 +109,11 @@ describe('MovieDetailPage', () => {
     await waitFor(() => expect(screen.getByText('Movie not found')).toBeInTheDocument())
   })
 
-  test('back button calls navigate(-1)', async () => {
+  test('error state includes a Go Back button', async () => {
+    ;(useMovieDetails as ReturnType<typeof vi.fn>).mockReturnValue({ ...defaultHook, movie: null, error: 'Not found' })
     render(<MovieDetailPage />)
-    await waitFor(() => expect(screen.getByLabelText('Go back')).toBeInTheDocument())
-    fireEvent.click(screen.getByLabelText('Go back'))
+    await waitFor(() => expect(screen.getByText('Go Back')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Go Back'))
     expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 })

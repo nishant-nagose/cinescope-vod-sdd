@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-04-23
-**Updated**: 2026-04-24 (spec updated with bugs + feature enhancements)
+**Updated**: 2026-04-25 (post-Phase-16 patches: swipe, trailer end-event, mobile zoom, regional content)
 **Clarified**: 2026-04-23 (5/5 questions answered), 2026-04-24 (3/3 new questions answered)
 **Feature**: [spec.md](../spec.md)
 
@@ -85,12 +85,25 @@
 
 **New Success Criteria Added:** SC-015 through SC-026
 
+## Scope of 2026-04-25 Updates (Post-Phase-16 Patches)
+
+**Regressions Fixed and New Requirements Formalised:**
+
+| FR | Description |
+|----|-------------|
+| FR-003 (updated) | Regional content: hero candidate vote-count thresholds must be low enough to include small-market content |
+| FR-003a (new) | Trailer end-event: hero slider must advance on YouTube video end; 2.5-min fallback must also fire |
+| FR-005a (updated) | Hero slider swipe: horizontal swipe ≥ 50px navigates prev/next on touch devices |
+| FR-056 (new) | Dropdown input font-size ≥ 16px to prevent iOS/Android zoom-on-focus |
+
 ## Notes
 
-- All checklist items pass. Spec is updated, fully clarified, and ready for `/speckit-plan` or `/speckit-tasks` revision.
+- All checklist items pass. Spec is updated, fully clarified, and implementation is complete.
 - Playback remains explicitly out of scope (FR-025a).
 - Recommended carousels require no authentication infrastructure (FR-012).
 - API failure handling addressed by FR-034.
-- Hero slider rotation behavior captured in FR-005a.
+- Hero slider rotation behavior captured in FR-005a (updated with swipe threshold).
+- Hero slider trailer auto-advance captured in FR-003a (new).
+- Mobile zoom prevention on dropdown inputs captured in FR-056 (new).
 - OTT deep-link fallback behavior (no link available) addressed in Edge Cases.
 - Carousel configuration fallback behavior (missing/malformed config) addressed in Edge Cases.

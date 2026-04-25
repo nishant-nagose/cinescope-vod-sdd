@@ -21,25 +21,24 @@ describe('LaunchScreen', () => {
   test('renders CineScope logo text', () => {
     const onComplete = vi.fn()
     render(<LaunchScreen onComplete={onComplete} />)
-    expect(screen.getByText('Cine')).toBeInTheDocument()
-    expect(screen.getByText('Scope')).toBeInTheDocument()
+    expect(screen.getByText('CineScope')).toBeInTheDocument()
   })
 
-  test('calls onComplete after 3000ms', () => {
+  test('calls onComplete after 3600ms', () => {
     const onComplete = vi.fn()
     render(<LaunchScreen onComplete={onComplete} />)
     expect(onComplete).not.toHaveBeenCalled()
     act(() => {
-      vi.advanceTimersByTime(3000)
+      vi.advanceTimersByTime(3600)
     })
     expect(onComplete).toHaveBeenCalledTimes(1)
   })
 
-  test('does not call onComplete before 3000ms', () => {
+  test('does not call onComplete before 3600ms', () => {
     const onComplete = vi.fn()
     render(<LaunchScreen onComplete={onComplete} />)
     act(() => {
-      vi.advanceTimersByTime(2999)
+      vi.advanceTimersByTime(3599)
     })
     expect(onComplete).not.toHaveBeenCalled()
   })

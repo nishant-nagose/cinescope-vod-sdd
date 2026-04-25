@@ -1,7 +1,26 @@
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
-at specs/011-shows-content-modernization/plan.md
+**CineScope POC is fully complete as of 2026-04-25.**
+All 11 feature specs (001–011) have been implemented and the codebase has been cleaned up.
+
+For project architecture, tech stack, and shell commands, see the constitution:
+- **Constitution**: `.specify/memory/constitution.md`
+- **Latest spec**: `specs/011-shows-content-modernization/`
+
+### Key source structure
+- `src/components/` — 29 UI components (MovieCarousel, ShowCarousel, HeroSlider, DynamicCarousel, etc.)
+- `src/hooks/` — 15 active hooks only (useApi, useInfiniteMovies, useInfiniteShows, useContentSearch, detail/media/metadata hooks)
+- `src/pages/` — 6 pages (HomePage, TrendingPage, TopRatedPage, SearchPage, MovieDetailPage, ShowDetailPage)
+- `src/services/` — tmdbApi.ts, cache.ts, errorHandling.ts
+- `src/config/` — carouselPool.ts (60+ carousel defs), ottProviders.ts
+- `src/utils/` — genreKeyMap.ts, carouselTitles.ts, ottNavigation.ts
+- `src/context/` — ContentFilterContext.tsx
+- `src/types/` — tmdb.ts
+
+### Shell commands
+- `npm run dev` — start dev server (Vite, port 5173)
+- `npm test` — run Vitest test suite (13 test files)
+- `npm run build` — TypeScript + Vite production build
+- `npx tsc --noEmit` — TypeScript type check only
 <!-- SPECKIT END -->
 
 
