@@ -18,9 +18,9 @@ interface HoverPreviewCardProps {
   onMouseLeave: () => void
 }
 
-const CARD_WIDTH = 340
-// Approximate preview height: 16:9 video (191px) + details section (~130px)
-const APPROX_HEIGHT = 320
+const CARD_WIDTH = 480
+// Approximate preview height: 16:9 video (270px) + details section (~160px)
+const APPROX_HEIGHT = 430
 
 export const HoverPreviewCard = ({
   id, title, overview, posterPath, backdropPath, voteAverage, year, mediaType,

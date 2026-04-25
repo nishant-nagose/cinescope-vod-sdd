@@ -31,15 +31,38 @@ export const HomePage = () => {
       (config.type === 'shows'  && (contentType === 'shows'  || contentType === 'all'))
     )
 
+    const langPool = buildLanguagePool(region, contentType)
+
     if (region) {
+      const regionalPool = buildRegionalPool(region, contentType)
+      if (!langPool.length) return [...regionalPool, ...globalPool]
+      // Prominent local languages immediately after regional block,
+      // remaining languages woven in after first wave of global content
+      const mid = Math.ceil(langPool.length / 2)
       return [
-        ...buildRegionalPool(region, contentType),
-        ...buildLanguagePool(region, contentType),
-        ...globalPool,
+        ...regionalPool,
+        ...langPool.slice(0, mid),
+        ...globalPool.slice(0, 10),
+        ...langPool.slice(mid),
+        ...globalPool.slice(10),
       ]
     }
 
-    return [...buildLanguagePool(null, contentType), ...globalPool]
+    if (!langPool.length) return globalPool
+
+    // Global: weave language spotlights at natural breaks — not dumped at the top
+    // Slice 0-7: Featured (new releases, trending, blockbusters, fan-favs)
+    // Then: language spotlight → genre movies → language spotlight → genre shows+quality → language tail → rest
+    const third = Math.ceil(langPool.length / 3)
+    return [
+      ...globalPool.slice(0, 8),
+      ...langPool.slice(0, third),
+      ...globalPool.slice(8, 18),
+      ...langPool.slice(third, 2 * third),
+      ...globalPool.slice(18, 30),
+      ...langPool.slice(2 * third),
+      ...globalPool.slice(30),
+    ]
   }, [activeGenreKey, contentType, region])
 
   const visiblePool = activePool.slice(0, visibleCount)

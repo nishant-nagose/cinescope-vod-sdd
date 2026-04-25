@@ -529,7 +529,7 @@ export const CAROUSEL_POOL: DynamicCarouselConfig[] = [
 // ── Language carousel builder ─────────────────────────────────────────────────
 
 const REGION_TO_LANGUAGES: Record<string, string[]> = {
-  IN: ['hi', 'ta', 'te', 'ml'],
+  IN: ['hi', 'mr', 'ta', 'te', 'ml'],
   KR: ['ko'],
   JP: ['ja'],
   CN: ['zh'], TW: ['zh'], HK: ['zh'],
@@ -548,6 +548,7 @@ const REGION_TO_LANGUAGES: Record<string, string[]> = {
 
 const LANGUAGE_LABELS: Record<string, string> = {
   hi: 'Bollywood',
+  mr: 'Marathi Cinema',
   ta: 'Tamil Cinema',
   te: 'Telugu Cinema',
   ml: 'Malayalam Cinema',
