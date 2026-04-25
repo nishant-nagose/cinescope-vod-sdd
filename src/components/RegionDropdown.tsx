@@ -69,7 +69,8 @@ export const RegionDropdown = ({ dropdownAlign = 'right' }: RegionDropdownProps)
               placeholder="Search region..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs bg-white/10 text-white placeholder-gray-400 rounded-lg border border-white/10 focus:outline-none focus:border-blue-500"
+              className="w-full px-2.5 py-1.5 bg-white/10 text-white placeholder-gray-400 rounded-lg border border-white/10 focus:outline-none focus:border-blue-500"
+              style={{ fontSize: '16px' }}
               aria-label="Search region"
               autoFocus
             />
