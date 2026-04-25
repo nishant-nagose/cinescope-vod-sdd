@@ -197,7 +197,8 @@ export const getHeroMovies = async (filter?: ContentFilterParams): Promise<Disco
       sort_by: 'popularity.desc',
       'primary_release_date.gte': fifteenDaysAgo,
       'primary_release_date.lte': today,
-      'vote_count.gte': '1',
+      'vote_count.gte': '30',
+      'vote_average.gte': '5.5',
       page: '1',
       ...filterParams,
     }),
@@ -205,12 +206,13 @@ export const getHeroMovies = async (filter?: ContentFilterParams): Promise<Disco
       sort_by: 'popularity.desc',
       'primary_release_date.gte': thirtyDaysAgo,
       'primary_release_date.lte': today,
-      'vote_count.gte': '1',
+      'vote_count.gte': '30',
+      'vote_average.gte': '5.5',
       page: '1',
       ...filterParams,
     }),
   ])
-  return short.results.length >= 10 ? short : long
+  return short.results.length >= 5 ? short : long
 }
 
 export const getHeroShows = async (filter?: ContentFilterParams): Promise<TVShowListResponse> => {
@@ -223,7 +225,8 @@ export const getHeroShows = async (filter?: ContentFilterParams): Promise<TVShow
       sort_by: 'popularity.desc',
       'first_air_date.gte': fifteenDaysAgo,
       'first_air_date.lte': today,
-      'vote_count.gte': '1',
+      'vote_count.gte': '20',
+      'vote_average.gte': '5.5',
       page: '1',
       ...filterParams,
     }),
@@ -231,12 +234,13 @@ export const getHeroShows = async (filter?: ContentFilterParams): Promise<TVShow
       sort_by: 'popularity.desc',
       'first_air_date.gte': thirtyDaysAgo,
       'first_air_date.lte': today,
-      'vote_count.gte': '1',
+      'vote_count.gte': '20',
+      'vote_average.gte': '5.5',
       page: '1',
       ...filterParams,
     }),
   ])
-  return short.results.length >= 10 ? short : long
+  return short.results.length >= 5 ? short : long
 }
 
 export const getComedyMovies = async (

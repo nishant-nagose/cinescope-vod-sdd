@@ -16,6 +16,20 @@ const mergeWithRegionalPriority = <T extends { id: number }>(
   return [...regional, ...extras]
 }
 
+/** Fisher-Yates shuffle — returns a new array */
+const shuffle = <T>(arr: T[]): T[] => {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+/** Keep only items that have a backdrop image (avoids blank hero cards). */
+const withBackdrop = (items: HeroItem[]): HeroItem[] =>
+  items.filter(i => !!i.backdrop_path)
+
 const interleave = (movies: HeroItem[], shows: HeroItem[], cap = 10): HeroItem[] => {
   const seen = new Set<number>()
   const merged: HeroItem[] = []
@@ -65,12 +79,12 @@ export const useHeroSlider = () => {
         .then(([moviesResp, showsResp]) => {
           if (cancelled) return
           const movies: HeroItem[] = fetchMovies
-            ? (moviesResp.results ?? []).map((m: Movie) => ({ ...m, mediaType: 'movie' as const }))
+            ? withBackdrop((moviesResp.results ?? []).map((m: Movie) => ({ ...m, mediaType: 'movie' as const })))
             : []
           const shows: HeroItem[] = fetchShows
-            ? (showsResp.results ?? []).map((s: TVShow) => ({ ...s, mediaType: 'tv' as const }))
+            ? withBackdrop((showsResp.results ?? []).map((s: TVShow) => ({ ...s, mediaType: 'tv' as const })))
             : []
-          setItems(interleave(movies, shows))
+          setItems(shuffle(interleave(movies, shows)))
         })
         .catch(() => { if (!cancelled) setItems([]) })
         .finally(() => { if (!cancelled) setLoading(false) })
@@ -85,15 +99,15 @@ export const useHeroSlider = () => {
         .then(([globalMoviesResp, regionalMoviesResp, globalShowsResp, regionalShowsResp]) => {
           if (cancelled) return
 
-          const globalMovies: HeroItem[]   = (globalMoviesResp.results   ?? []).map((m: Movie) => ({ ...m, mediaType: 'movie' as const }))
-          const regionalMovies: HeroItem[] = (regionalMoviesResp.results ?? []).map((m: Movie) => ({ ...m, mediaType: 'movie' as const }))
-          const globalShows: HeroItem[]    = (globalShowsResp.results    ?? []).map((s: TVShow) => ({ ...s, mediaType: 'tv' as const }))
-          const regionalShows: HeroItem[]  = (regionalShowsResp.results  ?? []).map((s: TVShow) => ({ ...s, mediaType: 'tv' as const }))
+          const globalMovies: HeroItem[]   = withBackdrop((globalMoviesResp.results   ?? []).map((m: Movie) => ({ ...m, mediaType: 'movie' as const })))
+          const regionalMovies: HeroItem[] = withBackdrop((regionalMoviesResp.results ?? []).map((m: Movie) => ({ ...m, mediaType: 'movie' as const })))
+          const globalShows: HeroItem[]    = withBackdrop((globalShowsResp.results    ?? []).map((s: TVShow) => ({ ...s, mediaType: 'tv' as const })))
+          const regionalShows: HeroItem[]  = withBackdrop((regionalShowsResp.results  ?? []).map((s: TVShow) => ({ ...s, mediaType: 'tv' as const })))
 
           const movies = fetchMovies ? mergeWithRegionalPriority(globalMovies, regionalMovies) : []
           const shows  = fetchShows  ? mergeWithRegionalPriority(globalShows,  regionalShows)  : []
 
-          setItems(interleave(movies, shows))
+          setItems(shuffle(interleave(movies, shows)))
         })
         .catch(() => { if (!cancelled) setItems([]) })
         .finally(() => { if (!cancelled) setLoading(false) })
