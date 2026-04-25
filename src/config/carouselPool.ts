@@ -525,3 +525,97 @@ export const CAROUSEL_POOL: DynamicCarouselConfig[] = [
     fetch: sh({ with_genres: '10762', sort_by: 'popularity.desc', 'vote_count.gte': '20' }, true),
   },
 ]
+
+// ── Genre-specific carousel builder ─────────────────────────────────────────
+// TMDB genre IDs per internal genreKey (pipe = OR on TMDB discover)
+export const GENRE_MOVIE_IDS: Record<string, string> = {
+  action:      '28|12',
+  scifi:       '878|14',
+  thriller:    '53|27|80',   // Thriller + Horror + Crime
+  comedy:      '35',
+  romance:     '10749',
+  animation:   '16',
+  documentary: '99|36',
+  family:      '10751',
+  drama:       '18',
+}
+
+export const GENRE_SHOW_IDS: Record<string, string> = {
+  action:      '10759',
+  scifi:       '10765',
+  thriller:    '9648|80|27', // Mystery + Crime + Horror
+  comedy:      '35',
+  romance:     '10749',
+  animation:   '16|10762',
+  documentary: '99|10764',
+  family:      '10751|10762',
+  drama:       '18',
+}
+
+const GENRE_LABELS: Record<string, string> = {
+  action:      'Action & Adventure',
+  scifi:       'Sci-Fi & Fantasy',
+  thriller:    'Thriller & Horror',
+  comedy:      'Comedy',
+  romance:     'Romance',
+  animation:   'Animation',
+  documentary: 'Documentary',
+  family:      'Family',
+  drama:       'Drama',
+}
+
+// Genre-specific exclusions to prevent bleed-in of unrelated genres
+const GENRE_MOVIE_EXCLUDE: Record<string, string> = {
+  drama:   '10749',    // exclude Romance from Drama
+  family:  '27|53',   // exclude Horror + Thriller from Family
+}
+
+const GENRE_SHOW_EXCLUDE: Record<string, string> = {
+  drama:   '10749',
+  family:  '27',
+}
+
+/**
+ * Builds a rich set of carousels for a single genre, covering multiple angles
+ * (popular, top-rated, new releases, hidden gems, classics).
+ * Used by HomePage when a category filter is active.
+ */
+export const buildGenrePool = (
+  genreKey: string,
+  contentType: 'movies' | 'shows' | 'all'
+): DynamicCarouselConfig[] => {
+  const label   = GENRE_LABELS[genreKey]         ?? genreKey
+  const movieId = GENRE_MOVIE_IDS[genreKey]
+  const showId  = GENRE_SHOW_IDS[genreKey]
+  const movieEx = GENRE_MOVIE_EXCLUDE[genreKey]  ?? ''
+  const showEx  = GENRE_SHOW_EXCLUDE[genreKey]   ?? ''
+  const pool: DynamicCarouselConfig[] = []
+
+  if (movieId && contentType !== 'shows') {
+    const mBase: Record<string, string> = { with_genres: movieId }
+    if (movieEx) mBase['without_genres'] = movieEx
+
+    pool.push(
+      { id: `g-${genreKey}-m-popular`, title: `Popular ${label} Movies`,   type: 'movies', genreKey, fetch: mv({ ...mBase, sort_by: 'popularity.desc' }, true) },
+      { id: `g-${genreKey}-m-rated`,   title: `Top-Rated ${label} Movies`, type: 'movies', genreKey, fetch: mv({ ...mBase, sort_by: 'vote_average.desc', 'vote_count.gte': '200' }, true) },
+      { id: `g-${genreKey}-m-new`,     title: `New ${label} Releases`,     type: 'movies', genreKey, fetch: mvd(() => ({ ...mBase, sort_by: 'release_date.desc', 'primary_release_date.gte': ago(365), 'primary_release_date.lte': today() }), true) },
+      { id: `g-${genreKey}-m-gems`,    title: `${label} Hidden Gems`,      type: 'movies', genreKey, fetch: mv({ ...mBase, sort_by: 'vote_average.desc', 'vote_count.gte': '30', 'vote_count.lte': '500', 'vote_average.gte': '7' }, true) },
+      { id: `g-${genreKey}-m-classic`, title: `Classic ${label} Movies`,   type: 'movies', genreKey, fetch: mv({ ...mBase, sort_by: 'vote_average.desc', 'primary_release_date.lte': '2010-12-31', 'vote_count.gte': '200' }, true) },
+    )
+  }
+
+  if (showId && contentType !== 'movies') {
+    const sBase: Record<string, string> = { with_genres: showId }
+    if (showEx) sBase['without_genres'] = showEx
+
+    pool.push(
+      { id: `g-${genreKey}-s-popular`, title: `Popular ${label} Shows`,        type: 'shows', genreKey, fetch: sh({ ...sBase, sort_by: 'popularity.desc',   'vote_count.gte': '20' }, true) },
+      { id: `g-${genreKey}-s-rated`,   title: `Top-Rated ${label} Shows`,      type: 'shows', genreKey, fetch: sh({ ...sBase, sort_by: 'vote_average.desc', 'vote_count.gte': '50' }, true) },
+      { id: `g-${genreKey}-s-new`,     title: `New ${label} Shows`,            type: 'shows', genreKey, fetch: shd(() => ({ ...sBase, sort_by: 'first_air_date.desc', 'first_air_date.gte': ago(365), 'first_air_date.lte': today() }), true) },
+      { id: `g-${genreKey}-s-gems`,    title: `${label} Hidden Gem Shows`,     type: 'shows', genreKey, fetch: sh({ ...sBase, sort_by: 'vote_average.desc', 'vote_count.gte': '30', 'vote_count.lte': '300', 'vote_average.gte': '7.5' }, true) },
+      { id: `g-${genreKey}-s-classic`, title: `Classic ${label} Series`,       type: 'shows', genreKey, fetch: sh({ ...sBase, sort_by: 'vote_average.desc', 'first_air_date.lte': '2015-12-31', 'vote_count.gte': '50' }, true) },
+    )
+  }
+
+  return pool
+}
