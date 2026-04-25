@@ -5,19 +5,11 @@ import { ContentFilterProvider } from './context/ContentFilterContext'
 import { LaunchScreen } from './components/LaunchScreen'
 
 function App() {
-  const [launched, setLaunched] = useState(
-    () => sessionStorage.getItem('cinescope_launched') !== null
-  )
+  // false = show launch screen on every hard page load / refresh
+  const [launched, setLaunched] = useState(false)
 
   if (!launched) {
-    return (
-      <LaunchScreen
-        onComplete={() => {
-          sessionStorage.setItem('cinescope_launched', '1')
-          setLaunched(true)
-        }}
-      />
-    )
+    return <LaunchScreen onComplete={() => setLaunched(true)} />
   }
 
   return (
