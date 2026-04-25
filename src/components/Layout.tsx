@@ -97,6 +97,13 @@ export const Layout = ({ children }: LayoutProps) => {
 
   const catLabel = activeCategoryName ? activeCategoryName : 'Categories'
 
+  const isFiltered = contentType !== 'all' || activeCategory !== null
+
+  const clearFilters = () => {
+    setContentType('all')
+    setActiveCategory(null)
+  }
+
   if (isDetailPage) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -156,21 +163,39 @@ export const Layout = ({ children }: LayoutProps) => {
           {/* ── Pill navigation bar ─────────────────────────────────────────── */}
           {/* NOTE: No overflow-x-auto here — it would clip absolute dropdown menus */}
           <div className="hidden sm:flex items-center gap-2 pb-2.5">
-            {/* Shows pill */}
-            <Pill
-              label="Shows"
-              active={contentType === 'shows'}
-              onClick={() => toggleContent('shows')}
-            />
 
-            {/* Movies pill */}
-            <Pill
-              label="Movies"
-              active={contentType === 'movies'}
-              onClick={() => toggleContent('movies')}
-            />
+            {/* Circle-X close button — only when any filter is active */}
+            {isFiltered && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center justify-center w-7 h-7 rounded-full bg-white/15 border border-white/25 text-white hover:bg-white/25 hover:border-white/40 transition-colors flex-shrink-0"
+                aria-label="Clear filters"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
 
-            {/* Categories pill + dropdown */}
+            {/* Shows pill: visible in default OR when shows is selected */}
+            {(!isFiltered || contentType === 'shows') && (
+              <Pill
+                label="Shows"
+                active={contentType === 'shows'}
+                onClick={() => toggleContent('shows')}
+              />
+            )}
+
+            {/* Movies pill: visible in default OR when movies is selected */}
+            {(!isFiltered || contentType === 'movies') && (
+              <Pill
+                label="Movies"
+                active={contentType === 'movies'}
+                onClick={() => toggleContent('movies')}
+              />
+            )}
+
+            {/* Categories pill + dropdown — always visible */}
             <div className="relative" ref={catRef}>
               <Pill
                 label={catLabel}
@@ -204,32 +229,34 @@ export const Layout = ({ children }: LayoutProps) => {
               )}
             </div>
 
-            {/* Pages pill + dropdown */}
-            <div className="relative" ref={pagesRef}>
-              <Pill
-                label="Pages"
-                active={pagesOpen}
-                onClick={() => setPagesOpen(o => !o)}
-              />
-              {pagesOpen && (
-                <div className="absolute top-full left-0 mt-1 z-[200] w-44 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden py-1">
-                  <Link
-                    to="/trending"
-                    onClick={() => setPagesOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    Trending
-                  </Link>
-                  <Link
-                    to="/top-rated"
-                    onClick={() => setPagesOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    Top Rated
-                  </Link>
-                </div>
-              )}
-            </div>
+            {/* Pages pill + dropdown — hidden when any filter is active */}
+            {!isFiltered && (
+              <div className="relative" ref={pagesRef}>
+                <Pill
+                  label="Pages"
+                  active={pagesOpen}
+                  onClick={() => setPagesOpen(o => !o)}
+                />
+                {pagesOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-[200] w-44 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden py-1">
+                    <Link
+                      to="/trending"
+                      onClick={() => setPagesOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      Trending
+                    </Link>
+                    <Link
+                      to="/top-rated"
+                      onClick={() => setPagesOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      Top Rated
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -237,15 +264,32 @@ export const Layout = ({ children }: LayoutProps) => {
         {mobileMenuOpen && (
           <div className="sm:hidden border-t border-white/8 bg-gray-900 px-4 py-3 space-y-2">
             <RegionDropdown />
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Pill label="Shows"   active={contentType === 'shows'}  onClick={() => { toggleContent('shows');  setMobileMenuOpen(false) }} />
-              <Pill label="Movies"  active={contentType === 'movies'} onClick={() => { toggleContent('movies'); setMobileMenuOpen(false) }} />
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {isFiltered && (
+                <button
+                  onClick={() => { clearFilters(); setMobileMenuOpen(false) }}
+                  className="flex items-center justify-center w-7 h-7 rounded-full bg-white/15 border border-white/25 text-white hover:bg-white/25 transition-colors flex-shrink-0"
+                  aria-label="Clear filters"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              {(!isFiltered || contentType === 'shows') && (
+                <Pill label="Shows" active={contentType === 'shows'} onClick={() => { toggleContent('shows'); setMobileMenuOpen(false) }} />
+              )}
+              {(!isFiltered || contentType === 'movies') && (
+                <Pill label="Movies" active={contentType === 'movies'} onClick={() => { toggleContent('movies'); setMobileMenuOpen(false) }} />
+              )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link to="/trending"  onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Trending</Link>
-              <span className="text-gray-600">·</span>
-              <Link to="/top-rated" onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Top Rated</Link>
-            </div>
+            {!isFiltered && (
+              <div className="flex flex-wrap gap-2">
+                <Link to="/trending"  onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Trending</Link>
+                <span className="text-gray-600">·</span>
+                <Link to="/top-rated" onClick={() => setMobileMenuOpen(false)} className="text-sm text-gray-300 hover:text-white transition-colors">Top Rated</Link>
+              </div>
+            )}
             {genresData && (
               <select
                 value={activeCategory ?? ''}

@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { getImageUrl } from '../services/tmdbApi'
+import { getImageUrl, getMovieVideos } from '../services/tmdbApi'
 import { TrailerPlayer } from './TrailerPlayer'
 import { HeroItem } from '../hooks/useHeroSlider'
 
 interface HeroSliderProps {
   items: HeroItem[]
   loading: boolean
-  currentVideoKey?: string | null
 }
 
 const HeroSkeleton = () => (
@@ -16,29 +15,81 @@ const HeroSkeleton = () => (
   </div>
 )
 
-export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps) => {
-  const [activeIndex, setActiveIndexState] = useState(0)
+export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [currentVideoKey, setCurrentVideoKey] = useState<string | null>(null)
   const [muted, setMuted] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const videoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const videoCache = useRef<Map<string, string | null>>(new Map())
 
-  const startInterval = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(() => {
-      setActiveIndexState(prev => (prev + 1) % items.length)
-    }, 6000)
-  }, [items.length])
+  const current = items[Math.min(activeIndex, Math.max(0, items.length - 1))]
+  const isMovie = current?.mediaType === 'movie'
+  const isTrailerPlaying = !!currentVideoKey && isMovie
 
+  // Reset to slide 0 when a new batch of items arrives (filter changed)
   useEffect(() => {
-    if (items.length === 0 || isPaused) return
-    startInterval()
+    setActiveIndex(0)
+    setCurrentVideoKey(null)
+    if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+  }, [items])
+
+  // 10s auto-advance — stops while trailer is playing or user is hovering
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    if (items.length === 0 || isPaused || isTrailerPlaying) return
+    intervalRef.current = setInterval(() => {
+      setActiveIndex(prev => (prev + 1) % items.length)
+    }, 10000)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [items.length, isPaused, startInterval])
+  }, [items.length, isPaused, isTrailerPlaying])
+
+  // Fetch trailer for movie slides — show after 5-second hold
+  useEffect(() => {
+    if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+    setCurrentVideoKey(null)
+
+    if (!items.length || activeIndex >= items.length) return
+    const item = items[activeIndex]
+    if (!item || item.mediaType !== 'movie') return
+
+    const cacheKey = `hero-${item.id}`
+
+    const scheduleVideo = (key: string | null) => {
+      if (key) {
+        videoTimerRef.current = setTimeout(() => setCurrentVideoKey(key), 5000)
+      }
+    }
+
+    if (videoCache.current.has(cacheKey)) {
+      scheduleVideo(videoCache.current.get(cacheKey) ?? null)
+      return
+    }
+
+    let cancelled = false
+    getMovieVideos(item.id)
+      .then(response => {
+        const trailer = response.results.find(
+          v => v.site === 'YouTube' && v.type === 'Trailer' && v.official
+        ) ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+        const key = trailer?.key ?? null
+        videoCache.current.set(cacheKey, key)
+        if (!cancelled) scheduleVideo(key)
+      })
+      .catch(() => { videoCache.current.set(cacheKey, null) })
+
+    return () => {
+      cancelled = true
+      if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+    }
+  }, [activeIndex, items])
 
   const goTo = useCallback((index: number) => {
-    setActiveIndexState(index)
-    startInterval()
-  }, [startInterval])
+    if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+    setCurrentVideoKey(null)
+    setActiveIndex(index)
+  }, [])
 
   const goPrev = useCallback(() => {
     goTo((activeIndex - 1 + items.length) % items.length)
@@ -49,10 +100,8 @@ export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps)
   }, [activeIndex, goTo, items.length])
 
   if (loading) return <HeroSkeleton />
-  if (items.length === 0) return null
+  if (!items.length || !current) return null
 
-  const current = items[activeIndex]
-  const isMovie = current.mediaType === 'movie'
   const title = isMovie ? (current as any).title : (current as any).name
   const year = isMovie
     ? ((current as any).release_date ?? '').slice(0, 4)
@@ -66,9 +115,9 @@ export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps)
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {currentVideoKey && isMovie ? (
+      {isTrailerPlaying ? (
         <div className="absolute inset-0">
-          <TrailerPlayer videoKey={currentVideoKey} autoplay muted={muted} title={title} />
+          <TrailerPlayer videoKey={currentVideoKey!} autoplay muted={muted} title={title} />
         </div>
       ) : (
         backdropUrl && (
@@ -112,7 +161,7 @@ export const HeroSlider = ({ items, loading, currentVideoKey }: HeroSliderProps)
       </div>
 
       {/* Mute toggle */}
-      {currentVideoKey && isMovie && (
+      {isTrailerPlaying && (
         <button
           onClick={() => setMuted(m => !m)}
           className="absolute bottom-16 right-4 z-20 p-2 bg-black bg-opacity-60 rounded-full text-white hover:bg-opacity-80 transition-colors"

@@ -42,11 +42,12 @@ export const HomePage = () => {
   const newReleases = useInfiniteMovies(
     (page, f) => getNewReleases(page, f), { cacheKeyPrefix: 'new-releases' }
   )
+  // Daily/weekly trending: regional when region is set (discover), global otherwise (trending endpoint)
   const dailyTrending = useInfiniteMovies(
-    (page) => getDailyTrending(page), { cacheKeyPrefix: 'daily-trending' }
+    (page, f) => getDailyTrending(page, f), { cacheKeyPrefix: 'daily-trending' }
   )
   const weeklyTrending = useInfiniteMovies(
-    (page) => getWeeklyTrending(page), { cacheKeyPrefix: 'weekly-trending' }
+    (page, f) => getWeeklyTrending(page, f), { cacheKeyPrefix: 'weekly-trending' }
   )
   const trending = useInfiniteMovies(
     (page, f) => getTrendingMovies(page, f), { cacheKeyPrefix: 'trending' }
@@ -54,32 +55,33 @@ export const HomePage = () => {
   const acclaimed = useInfiniteMovies(
     (page, f) => getCriticallyAcclaimed(page, f), { cacheKeyPrefix: 'acclaimed' }
   )
+  // Genre carousels: strip country filter so mixed global + any-regional content is shown
   const comedy = useInfiniteMovies(
-    (page, f) => getComedyMovies(page, f), { cacheKeyPrefix: 'comedy' }
+    (page, f) => getComedyMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'comedy' }
   )
   const sciFiFantasy = useInfiniteMovies(
-    (page, f) => getSciFiFantasyMovies(page, f), { cacheKeyPrefix: 'sci-fi' }
+    (page, f) => getSciFiFantasyMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'sci-fi' }
   )
   const realLife = useInfiniteMovies(
-    (page, f) => getRealLifeMovies(page, f), { cacheKeyPrefix: 'real-life' }
+    (page, f) => getRealLifeMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'real-life' }
   )
   const animation = useInfiniteMovies(
-    (page, f) => getAnimationMovies(page, f), { cacheKeyPrefix: 'animation' }
+    (page, f) => getAnimationMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'animation' }
   )
   const romance = useInfiniteMovies(
-    (page, f) => getRomanceMovies(page, f), { cacheKeyPrefix: 'romance' }
+    (page, f) => getRomanceMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'romance' }
   )
   const actionAdventure = useInfiniteMovies(
-    (page, f) => getActionAdventureMovies(page, f), { cacheKeyPrefix: 'action-adventure' }
+    (page, f) => getActionAdventureMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'action-adventure' }
   )
   const awardWinning = useInfiniteMovies(
-    (page, f) => getAwardWinningMovies(page, f), { cacheKeyPrefix: 'award-winning' }
+    (page, f) => getAwardWinningMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'award-winning' }
   )
   const inspiring = useInfiniteMovies(
-    (page, f) => getInspiringMovies(page, f), { cacheKeyPrefix: 'inspiring' }
+    (page, f) => getInspiringMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'inspiring' }
   )
   const thriller = useInfiniteMovies(
-    (page, f) => getThrillerMovies(page, f), { cacheKeyPrefix: 'thriller' }
+    (page, f) => getThrillerMovies(page, { ...f, countries: [] }), { cacheKeyPrefix: 'thriller' }
   )
   const upcomingMoviesHook = useInfiniteMovies(
     (page) => getUpcomingMovies(page), { cacheKeyPrefix: 'upcoming-movies' }
@@ -143,11 +145,7 @@ export const HomePage = () => {
 
   return (
     <div>
-      <HeroSlider
-        items={heroSlider.items}
-        loading={heroSlider.loading}
-        currentVideoKey={heroSlider.currentVideoKey}
-      />
+      <HeroSlider items={heroSlider.items} loading={heroSlider.loading} />
 
       <div className="py-4 sm:py-6">
         {/* Carousels — driven by CAROUSEL_CONFIG */}
