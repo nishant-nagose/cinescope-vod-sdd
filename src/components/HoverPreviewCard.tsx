@@ -19,16 +19,21 @@ interface HoverPreviewCardProps {
 }
 
 const CARD_WIDTH = 340
+// Approximate preview height: 16:9 video (191px) + details section (~130px)
+const APPROX_HEIGHT = 320
 
 export const HoverPreviewCard = ({
   id, title, overview, posterPath, backdropPath, voteAverage, year, mediaType,
   videoKey, targetRect, onMouseEnter, onMouseLeave,
 }: HoverPreviewCardProps) => {
+  // Center the preview horizontally over the original card
   const centerX = targetRect.left + targetRect.width / 2
   const left = Math.max(8, Math.min(window.innerWidth - CARD_WIDTH - 8, centerX - CARD_WIDTH / 2))
-  const top = targetRect.top > 340
-    ? targetRect.top - 340 - 8
-    : targetRect.bottom + 8
+
+  // Center the preview vertically over the original card — expanding equally above/below
+  const cardCenterY = targetRect.top + targetRect.height / 2
+  const idealTop = cardCenterY - APPROX_HEIGHT / 2
+  const top = Math.max(60, Math.min(window.innerHeight - APPROX_HEIGHT - 8, idealTop))
 
   const imageUrl = getImageUrl(backdropPath ?? posterPath, 'w780')
   const linkPath = mediaType === 'movie' ? `/movie/${id}` : `/show/${id}`

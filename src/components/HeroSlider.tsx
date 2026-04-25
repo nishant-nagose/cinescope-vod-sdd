@@ -85,9 +85,11 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
 
     fetchVideos
       .then(response => {
-        const trailer = response.results.find(
-          v => v.site === 'YouTube' && v.type === 'Trailer' && v.official
-        ) ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+        const trailer = response.results.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
+          ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+          ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Teaser' && v.official)
+          ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Teaser')
+          ?? response.results.find(v => v.site === 'YouTube' && v.type === 'Clip')
         const key = trailer?.key ?? null
         videoCache.current.set(cacheKey, key)
         if (!cancelled) scheduleVideo(key)

@@ -69,7 +69,7 @@ export const RankedShowCard = memo(({ show, rank }: RankedShowCardProps) => {
     >
       <Link
         to={`/show/${show.id}`}
-        className="block"
+        className={`block transition-opacity duration-200 ${previewRect ? 'opacity-0' : ''}`}
         aria-label={`${show.name} - Rank ${rank}`}
       >
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-gray-700">

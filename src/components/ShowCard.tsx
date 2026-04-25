@@ -69,7 +69,7 @@ export const ShowCard = memo(({ show }: ShowCardProps) => {
     >
       <Link
         to={`/show/${show.id}`}
-        className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 block"
+        className={`bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 block ${previewRect ? 'opacity-0' : ''}`}
       >
         <div className="aspect-[2/3] relative">
           {posterUrl ? (
