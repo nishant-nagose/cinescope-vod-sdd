@@ -265,7 +265,7 @@ export const Layout = ({ children }: LayoutProps) => {
         {/* ── Mobile slide-down menu ──────────────────────────────────────── */}
         {mobileMenuOpen && (
           <div className="sm:hidden border-t border-white/8 bg-gray-900 px-4 py-3 space-y-3">
-            <RegionDropdown />
+            <RegionDropdown dropdownAlign="left" />
 
             {/* Pill row */}
             <div className="flex flex-wrap items-center gap-2">

@@ -14,7 +14,11 @@ const ChevronIcon = ({ open }: { open: boolean }) => (
   </svg>
 )
 
-export const RegionDropdown = () => {
+interface RegionDropdownProps {
+  dropdownAlign?: 'left' | 'right'
+}
+
+export const RegionDropdown = ({ dropdownAlign = 'right' }: RegionDropdownProps) => {
   const { region, setRegion } = useContentFilter()
   const { data: countryList } = useCountries()
   const [open, setOpen] = useState(false)
@@ -57,7 +61,7 @@ export const RegionDropdown = () => {
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-1 z-50 w-60 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden">
+        <div className={`absolute top-full mt-1 z-50 w-60 bg-gray-900 border border-white/15 rounded-xl shadow-2xl overflow-hidden ${dropdownAlign === 'left' ? 'left-0' : 'right-0'}`}>
           {/* Search */}
           <div className="p-2 border-b border-white/10">
             <input

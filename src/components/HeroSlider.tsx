@@ -24,6 +24,14 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
   const videoTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
   const trailerAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const videoCache        = useRef<Map<string, string | null>>(new Map())
+  const heroRef           = useRef<HTMLDivElement>(null)
+  const isHeroVisibleRef  = useRef(true)
+  const activeIndexRef    = useRef(activeIndex)
+  const itemsRef          = useRef(items)
+
+  // Keep refs current so the IntersectionObserver callback always sees latest state
+  activeIndexRef.current = activeIndex
+  itemsRef.current = items
 
   const current = items[Math.min(activeIndex, Math.max(0, items.length - 1))]
   const isMovie = current?.mediaType === 'movie'
@@ -38,11 +46,46 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
     if (trailerAdvanceRef.current) clearTimeout(trailerAdvanceRef.current)
   }, [items])
 
+  // Pause trailer when hero scrolls out of view; resume from cache when it returns
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        isHeroVisibleRef.current = entry.isIntersecting
+        if (!entry.isIntersecting) {
+          if (videoTimerRef.current) clearTimeout(videoTimerRef.current)
+          if (trailerAdvanceRef.current) clearTimeout(trailerAdvanceRef.current)
+          setCurrentVideoKey(null)
+        } else {
+          // Re-schedule from cache so the trailer picks back up
+          const curItems = itemsRef.current
+          const item = curItems[activeIndexRef.current]
+          if (!item) return
+          const cached = videoCache.current.get(`hero-${item.id}-${item.mediaType}`)
+          if (cached) {
+            videoTimerRef.current = setTimeout(() => {
+              setCurrentVideoKey(cached)
+              trailerAdvanceRef.current = setTimeout(() => {
+                setCurrentVideoKey(null)
+                setActiveIndex(prev => (prev + 1) % itemsRef.current.length)
+              }, 150_000)
+            }, 3000)
+          }
+        }
+      },
+      { threshold: 0.1 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   // 10s auto-advance — paused while trailer is playing or mouse is hovering
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (items.length === 0 || isPaused || isTrailerPlaying) return
     intervalRef.current = setInterval(() => {
+      if (!isHeroVisibleRef.current) return
       setActiveIndex(prev => (prev + 1) % items.length)
     }, 10000)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
@@ -64,6 +107,7 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
     const scheduleVideo = (key: string | null) => {
       if (!key) return
       videoTimerRef.current = setTimeout(() => {
+        if (!isHeroVisibleRef.current) return
         setCurrentVideoKey(key)
         // Auto-advance after 2.5 min in case YouTube doesn't fire an end event
         trailerAdvanceRef.current = setTimeout(() => {
@@ -130,6 +174,7 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
 
   return (
     <div
+      ref={heroRef}
       className="relative w-full overflow-hidden bg-gray-900 aspect-video max-h-[85vh] min-h-[300px]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}

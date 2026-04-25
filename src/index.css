@@ -2,11 +2,18 @@
 
 /* ── Viewport stability (prevents tablet scroll layout shift) ──────────────── */
 html {
-  scrollbar-gutter: stable;
   overflow-x: hidden;
+}
+/* scrollbar-gutter is desktop-only; guard for Android/older browsers */
+@supports (scrollbar-gutter: stable) {
+  html {
+    scrollbar-gutter: stable;
+  }
 }
 body {
   overflow-x: hidden;
+  /* Smooth momentum scrolling on iOS/Android WebView */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Page & navigation transitions ─────────────────────────────────────────── */
