@@ -526,6 +526,101 @@ export const CAROUSEL_POOL: DynamicCarouselConfig[] = [
   },
 ]
 
+// ── Language carousel builder ─────────────────────────────────────────────────
+
+const REGION_TO_LANGUAGES: Record<string, string[]> = {
+  IN: ['hi', 'ta', 'te', 'ml'],
+  KR: ['ko'],
+  JP: ['ja'],
+  CN: ['zh'], TW: ['zh'], HK: ['zh'],
+  ES: ['es'], MX: ['es'], AR: ['es'], CO: ['es'], CL: ['es'], PE: ['es'],
+  BR: ['pt'], PT: ['pt'],
+  FR: ['fr'],
+  TR: ['tr'],
+  TH: ['th'],
+  IT: ['it'],
+  DE: ['de'], AT: ['de'],
+  RU: ['ru'],
+  PL: ['pl'],
+  ID: ['id'],
+  MY: ['ms'],
+}
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  hi: 'Bollywood',
+  ta: 'Tamil Cinema',
+  te: 'Telugu Cinema',
+  ml: 'Malayalam Cinema',
+  ko: 'Korean Wave',
+  ja: 'Japanese',
+  zh: 'Chinese Cinema',
+  es: 'Spanish & Latin',
+  pt: 'Portuguese',
+  fr: 'French Cinema',
+  tr: 'Turkish',
+  th: 'Thai',
+  it: 'Italian Cinema',
+  de: 'German Cinema',
+  ru: 'Russian Cinema',
+  pl: 'Polish Cinema',
+  id: 'Indonesian',
+  ms: 'Malay',
+}
+
+const GLOBAL_LANGUAGES = ['hi', 'ko', 'ja', 'es', 'zh', 'fr', 'tr', 'pt']
+
+// Strip BOTH country and language from filter so language carousels always fetch correctly
+const mvl = (params: Record<string, string>) =>
+  (page: number, f: ContentFilterParams): Promise<DiscoverResponse> =>
+    discoverMovies(params, page, { ...f, countries: [], languages: [] })
+
+const shl = (params: Record<string, string>) =>
+  (page: number, f: ContentFilterParams): Promise<TVShowListResponse> =>
+    discoverTV(params, page, { ...f, countries: [], languages: [] })
+
+/**
+ * Builds language-specific carousels.
+ * When region is set: languages local to that region (excluding English).
+ * When region is null (Global): major world languages.
+ * Positioned between regional carousels and the global pool.
+ */
+export const buildLanguagePool = (
+  region: string | null,
+  contentType: 'movies' | 'shows' | 'all'
+): DynamicCarouselConfig[] => {
+  const langs = region
+    ? (REGION_TO_LANGUAGES[region] ?? []).filter(l => l !== 'en')
+    : GLOBAL_LANGUAGES
+
+  if (langs.length === 0) return []
+
+  const pool: DynamicCarouselConfig[] = []
+
+  for (const lang of langs) {
+    const label = LANGUAGE_LABELS[lang] ?? lang.toUpperCase()
+
+    if (contentType !== 'shows') {
+      pool.push({
+        id: `lang-${lang}-m`,
+        title: `${label} Movies`,
+        type: 'movies',
+        fetch: mvl({ with_original_language: lang, sort_by: 'popularity.desc', 'vote_count.gte': '10' }),
+      })
+    }
+
+    if (contentType !== 'movies') {
+      pool.push({
+        id: `lang-${lang}-s`,
+        title: `${label} Shows`,
+        type: 'shows',
+        fetch: shl({ with_original_language: lang, sort_by: 'popularity.desc', 'vote_count.gte': '10' }),
+      })
+    }
+  }
+
+  return pool
+}
+
 // ── Genre-specific carousel builder ─────────────────────────────────────────
 // TMDB genre IDs per internal genreKey (pipe = OR on TMDB discover)
 export const GENRE_MOVIE_IDS: Record<string, string> = {

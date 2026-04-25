@@ -3,7 +3,7 @@ import { useContentFilter } from '../context/ContentFilterContext'
 import { HeroSlider } from '../components/HeroSlider'
 import { LazySection } from '../components/LazySection'
 import { DynamicCarousel } from '../components/DynamicCarousel'
-import { CAROUSEL_POOL, buildGenrePool, buildRegionalPool } from '../config/carouselPool'
+import { CAROUSEL_POOL, buildGenrePool, buildRegionalPool, buildLanguagePool } from '../config/carouselPool'
 import { GENRE_KEY_MAP } from '../utils/genreKeyMap'
 import { useHeroSlider } from '../hooks/useHeroSlider'
 
@@ -32,10 +32,14 @@ export const HomePage = () => {
     )
 
     if (region) {
-      return [...buildRegionalPool(region, contentType), ...globalPool]
+      return [
+        ...buildRegionalPool(region, contentType),
+        ...buildLanguagePool(region, contentType),
+        ...globalPool,
+      ]
     }
 
-    return globalPool
+    return [...buildLanguagePool(null, contentType), ...globalPool]
   }, [activeGenreKey, contentType, region])
 
   const visiblePool = activePool.slice(0, visibleCount)

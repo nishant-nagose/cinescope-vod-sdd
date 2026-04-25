@@ -1,5 +1,14 @@
 @import './styles/tailwind.css';
 
+/* ── Viewport stability (prevents tablet scroll layout shift) ──────────────── */
+html {
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+body {
+  overflow-x: hidden;
+}
+
 /* ── Page & navigation transitions ─────────────────────────────────────────── */
 @keyframes pageEnterFade {
   from { opacity: 0; transform: translateY(14px) scale(0.985); }
@@ -19,7 +28,7 @@
 
 /* ── Hover preview card ─────────────────────────────────────────────────────── */
 @keyframes hoverCardIn {
-  from { opacity: 0; transform: scale(0.88) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from { opacity: 0; transform: scale(0.72); }
+  to   { opacity: 1; transform: scale(1); }
 }
-.hover-card-enter { animation: hoverCardIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hover-card-enter { animation: hoverCardIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
