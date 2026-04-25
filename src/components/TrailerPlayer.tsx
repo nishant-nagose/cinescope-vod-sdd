@@ -1,9 +1,12 @@
+import { useEffect, useRef } from 'react'
+
 interface TrailerPlayerProps {
   videoKey: string
   autoplay?: boolean
   muted?: boolean
   title?: string
   onClose?: () => void
+  onEnded?: () => void
 }
 
 export const TrailerPlayer = ({
@@ -12,12 +15,34 @@ export const TrailerPlayer = ({
   muted = true,
   title = 'Movie Trailer',
   onClose,
+  onEnded,
 }: TrailerPlayerProps) => {
+  const onEndedRef = useRef(onEnded)
+  onEndedRef.current = onEnded
+
+  useEffect(() => {
+    if (!onEnded) return
+    const handler = (e: MessageEvent) => {
+      if (e.origin !== 'https://www.youtube.com') return
+      try {
+        const data = JSON.parse(e.data as string)
+        // YouTube state 0 = ended
+        if (data.event === 'onStateChange' && data.info === 0) {
+          onEndedRef.current?.()
+        }
+      } catch {}
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [onEnded])
+
   const params = new URLSearchParams({
     autoplay: autoplay ? '1' : '0',
     mute: muted ? '1' : '0',
     playsinline: '1',
     rel: '0',
+    enablejsapi: '1',
+    origin: window.location.origin,
   })
   const src = `https://www.youtube.com/embed/${videoKey}?${params.toString()}`
 

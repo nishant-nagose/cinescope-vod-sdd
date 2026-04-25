@@ -63,9 +63,11 @@ export const MovieCarousel = memo(({
       container.scrollLeft = 0
       savedScrollLeft.current = 0
     } else if (movies.length > prevLength && prevLength > 0) {
-      // Android Chrome resets scrollLeft on DOM mutation; restore the saved position.
-      // Desktop/iOS preserve it natively, so this is a no-op there.
-      container.scrollLeft = savedScrollLeft.current
+      // Android Chrome resets scrollLeft to 0 on DOM mutation; restore saved position.
+      // Desktop/iOS preserve it natively — only intervene when browser actually reset it.
+      if (container.scrollLeft === 0 && savedScrollLeft.current > 0) {
+        container.scrollLeft = savedScrollLeft.current
+      }
     }
   }, [movies])
 

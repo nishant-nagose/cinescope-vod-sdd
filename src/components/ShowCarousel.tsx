@@ -62,8 +62,11 @@ export const ShowCarousel = memo(({
       container.scrollLeft = 0
       savedScrollLeft.current = 0
     } else if (shows.length > prevLength && prevLength > 0) {
-      // Android Chrome resets scrollLeft on DOM mutation; restore the saved position.
-      container.scrollLeft = savedScrollLeft.current
+      // Android Chrome resets scrollLeft to 0 on DOM mutation; restore saved position.
+      // Desktop/iOS preserve it natively — only intervene when browser actually reset it.
+      if (container.scrollLeft === 0 && savedScrollLeft.current > 0) {
+        container.scrollLeft = savedScrollLeft.current
+      }
     }
   }, [shows])
 

@@ -181,7 +181,7 @@ export const HeroSlider = ({ items, loading }: HeroSliderProps) => {
     >
       {isTrailerPlaying ? (
         <div className="absolute inset-0">
-          <TrailerPlayer videoKey={currentVideoKey!} autoplay muted={muted} title={title} />
+          <TrailerPlayer videoKey={currentVideoKey!} autoplay muted={muted} title={title} onEnded={goNext} />
         </div>
       ) : (
         backdropUrl && (
