@@ -3,6 +3,6 @@ import { getShowsByGenre } from '../services/tmdbApi'
 
 export const useThrillerShows = () =>
   useInfiniteShows(
-    (page, filter) => getShowsByGenre('9648,80', page, filter),
+    (page, filter) => getShowsByGenre('9648,80', page, { ...filter, countries: [] }),
     { cacheKeyPrefix: 'thriller-shows' }
   )

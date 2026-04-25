@@ -51,6 +51,8 @@ export const MovieCarousel = memo(({
   const sentinelRef = useRef<HTMLDivElement>(null)
   const scrollLeftRef = useRef(0)
   const prevMoviesLengthRef = useRef(0)
+  const loadingRef = useRef(loading ?? false)
+  loadingRef.current = loading ?? false
 
   useEffect(() => {
     const container = scrollRef.current
@@ -78,8 +80,8 @@ export const MovieCarousel = memo(({
   useEffect(() => {
     if (!onLoadMore || !hasMore || !sentinelRef.current) return
     const observer = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting) onLoadMore() },
-      { root: scrollRef.current, rootMargin: '0px 200px 0px 0px' }
+      entries => { if (entries[0].isIntersecting && !loadingRef.current) onLoadMore() },
+      { root: scrollRef.current, rootMargin: '0px 200px 0px 0px', threshold: 0 }
     )
     observer.observe(sentinelRef.current)
     return () => observer.disconnect()

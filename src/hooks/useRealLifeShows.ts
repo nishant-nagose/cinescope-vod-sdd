@@ -3,6 +3,6 @@ import { getShowsByGenre } from '../services/tmdbApi'
 
 export const useRealLifeShows = () =>
   useInfiniteShows(
-    (page, filter) => getShowsByGenre(99, page, filter),
+    (page, filter) => getShowsByGenre(99, page, { ...filter, countries: [] }),
     { cacheKeyPrefix: 'real-life-shows' }
   )

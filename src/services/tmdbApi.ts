@@ -156,12 +156,87 @@ export const getPersonMovieCredits = async (personId: number): Promise<PersonMov
   return apiRequest(`/person/${personId}/movie_credits`)
 }
 
-export const getDailyTrending = async (page: number = 1): Promise<DiscoverResponse> => {
+export const getDailyTrending = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
+  if (filter?.countries[0]) {
+    return apiRequest('/discover/movie', {
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '20',
+      page: page.toString(),
+      ...buildFilterParams(filter),
+    })
+  }
   return apiRequest('/trending/movie/day', { page: page.toString() })
 }
 
-export const getWeeklyTrending = async (page: number = 1): Promise<DiscoverResponse> => {
+export const getWeeklyTrending = async (
+  page: number = 1,
+  filter?: ContentFilterParams
+): Promise<DiscoverResponse> => {
+  if (filter?.countries[0]) {
+    return apiRequest('/discover/movie', {
+      sort_by: 'popularity.desc',
+      'vote_count.gte': '50',
+      page: page.toString(),
+      ...buildFilterParams(filter),
+    })
+  }
   return apiRequest('/trending/movie/week', { page: page.toString() })
+}
+
+// Hero slider: new releases in the last 15 days (30-day fallback), with optional regional filter
+export const getHeroMovies = async (filter?: ContentFilterParams): Promise<DiscoverResponse> => {
+  const today = new Date().toISOString().slice(0, 10)
+  const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const filterParams = filter ? buildFilterParams(filter) : {}
+  const [short, long] = await Promise.all([
+    apiRequest('/discover/movie', {
+      sort_by: 'popularity.desc',
+      'primary_release_date.gte': fifteenDaysAgo,
+      'primary_release_date.lte': today,
+      'vote_count.gte': '1',
+      page: '1',
+      ...filterParams,
+    }),
+    apiRequest('/discover/movie', {
+      sort_by: 'popularity.desc',
+      'primary_release_date.gte': thirtyDaysAgo,
+      'primary_release_date.lte': today,
+      'vote_count.gte': '1',
+      page: '1',
+      ...filterParams,
+    }),
+  ])
+  return short.results.length >= 10 ? short : long
+}
+
+export const getHeroShows = async (filter?: ContentFilterParams): Promise<TVShowListResponse> => {
+  const today = new Date().toISOString().slice(0, 10)
+  const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const filterParams = filter ? buildTVFilterParams(filter) : {}
+  const [short, long] = await Promise.all([
+    apiRequest('/discover/tv', {
+      sort_by: 'popularity.desc',
+      'first_air_date.gte': fifteenDaysAgo,
+      'first_air_date.lte': today,
+      'vote_count.gte': '1',
+      page: '1',
+      ...filterParams,
+    }),
+    apiRequest('/discover/tv', {
+      sort_by: 'popularity.desc',
+      'first_air_date.gte': thirtyDaysAgo,
+      'first_air_date.lte': today,
+      'vote_count.gte': '1',
+      page: '1',
+      ...filterParams,
+    }),
+  ])
+  return short.results.length >= 10 ? short : long
 }
 
 export const getComedyMovies = async (
