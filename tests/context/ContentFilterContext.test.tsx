@@ -8,42 +8,52 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 )
 
 describe('ContentFilterContext', () => {
-  test('provides default countries and languages', () => {
+  test('provides default region as null (global)', () => {
     const { result } = renderHook(() => useContentFilter(), { wrapper })
-    expect(result.current.countries).toEqual(['US'])
-    expect(result.current.languages).toEqual(['en'])
+    expect(result.current.region).toBeNull()
+    expect(result.current.countries).toEqual([])
+    expect(result.current.languages).toEqual([])
   })
 
-  test('provides default filterKey of US-en-all-all', () => {
+  test('provides default filterKey of global-all-all', () => {
     const { result } = renderHook(() => useContentFilter(), { wrapper })
-    expect(result.current.filterKey).toBe('US-en-all-all')
+    expect(result.current.filterKey).toBe('global-all-all')
   })
 
-  test('setCountries updates countries and filterKey', () => {
+  test('setRegion updates region, countries, and filterKey', () => {
     const { result } = renderHook(() => useContentFilter(), { wrapper })
     act(() => {
-      result.current.setCountries(['KR', 'FR'])
+      result.current.setRegion('IN')
     })
-    expect(result.current.countries).toEqual(['KR', 'FR'])
-    expect(result.current.filterKey).toBe('KR,FR-en-all-all')
+    expect(result.current.region).toBe('IN')
+    expect(result.current.countries).toEqual(['IN'])
+    expect(result.current.filterKey).toBe('IN-all-all')
   })
 
-  test('setLanguages updates languages and filterKey', () => {
+  test('setRegion to null reverts to global', () => {
     const { result } = renderHook(() => useContentFilter(), { wrapper })
-    act(() => {
-      result.current.setLanguages(['ko', 'fr'])
-    })
-    expect(result.current.languages).toEqual(['ko', 'fr'])
-    expect(result.current.filterKey).toBe('US-ko,fr-all-all')
+    act(() => { result.current.setRegion('KR') })
+    act(() => { result.current.setRegion(null) })
+    expect(result.current.region).toBeNull()
+    expect(result.current.filterKey).toBe('global-all-all')
   })
 
-  test('empty arrays produce filterKey with empty segments', () => {
+  test('setContentType updates filterKey', () => {
     const { result } = renderHook(() => useContentFilter(), { wrapper })
     act(() => {
-      result.current.setCountries([])
-      result.current.setLanguages([])
+      result.current.setContentType('movies')
     })
-    expect(result.current.filterKey).toBe('--all-all')
+    expect(result.current.contentType).toBe('movies')
+    expect(result.current.filterKey).toBe('global-movies-all')
+  })
+
+  test('setActiveCategory updates filterKey', () => {
+    const { result } = renderHook(() => useContentFilter(), { wrapper })
+    act(() => {
+      result.current.setActiveCategory(28)
+    })
+    expect(result.current.activeCategory).toBe(28)
+    expect(result.current.filterKey).toBe('global-all-28')
   })
 
   test('ContentFilterProvider renders children', () => {

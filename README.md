@@ -1,14 +1,22 @@
 # CineScope
 
-A modern movie browsing application built with React 18, TypeScript, and Vite. Discover trending movies, explore top-rated content, search by title, and view detailed movie information.
+A modern VOD discovery platform built with React 18, TypeScript, and Vite. Browse trending movies and TV shows, explore top-rated content, search across both media types, and view rich detail pages — all powered by the TMDB API.
+
+**Live:** https://nishant-nagose.github.io/cinescope-vod-sdd/
 
 ## Features
 
-- **Trending Movies**: Browse the latest trending movies from TMDB
-- **Top Rated**: Discover highly-rated movies sorted by popularity
-- **Search**: Find movies by title with real-time suggestions
-- **Movie Details**: Comprehensive movie information including cast, ratings, and related movies
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Hero Slider**: Full-width auto-advancing hero with trailer playback, swipe support, and mixed movies + shows
+- **Dynamic Carousels**: 60+ lazily-loaded carousels — genre, trending, quality, mood, language, and regional
+- **Content Toggle**: Switch between Movies, Shows, or All — filters every section globally
+- **Trending**: Dedicated trending page for movies and shows with infinite scroll
+- **Top Rated**: Dedicated top-rated page with infinite scroll
+- **Search**: Unified search across movies and TV shows with type badges
+- **Movie Details**: Backdrop → auto-trailer (10s), Trailers & Clips, Cast, Filmography, Watch Providers
+- **Show Details**: Season/episode accordion, Cast, Trailers, Watch Providers, Similar Shows
+- **Country & Language Filtering**: Regional and language-specific carousel rows
+- **OTT Navigation**: Watch Provider icons link directly to platform apps on mobile
+- **Responsive Design**: Mobile-first, touch-swipe, Tailwind CSS
 
 ## Tech Stack
 
@@ -68,13 +76,26 @@ A modern movie browsing application built with React 18, TypeScript, and Vite. D
 
 ```
 src/
-├── components/     # Reusable UI components
-├── pages/         # Page components
-├── services/      # API services and utilities
-├── hooks/         # Custom React hooks
-├── types/         # TypeScript type definitions
-├── styles/        # Global styles and Tailwind config
-└── tests/         # Test files
+├── components/   # 29 UI components (HeroSlider, DynamicCarousel, MovieCard, ShowCard, ...)
+├── config/       # carouselPool.ts (60+ carousel defs), ottProviders.ts
+├── context/      # ContentFilterContext (content type, category, region)
+├── hooks/        # 15 active hooks (useInfiniteMovies, useShowDetails, useHeroSlider, ...)
+├── pages/        # HomePage, TrendingPage, TopRatedPage, SearchPage, MovieDetailPage, ShowDetailPage
+├── services/     # tmdbApi.ts, cache.ts, errorHandling.ts
+├── types/        # tmdb.ts (Movie, TVShow, Episode, WatchProvider, ...)
+├── utils/        # genreKeyMap.ts, carouselTitles.ts, ottNavigation.ts
+├── styles/       # tailwind.css, index.css
+├── images/       # cinescope-logo.svg
+├── App.tsx
+├── main.tsx
+└── routes.tsx
+tests/
+├── components/   # Component-level tests
+├── context/      # Context tests
+├── pages/        # Page-level tests
+└── services/     # API service tests
+specs/
+└── 001–011/      # Feature specs (all implemented)
 ```
 
 ## Contributing

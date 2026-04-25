@@ -1,57 +1,60 @@
 <!--
-Version change: none → 1.0.0
-List of modified principles: sample content imported
-Added sections: Executive Summary, Problem Statement, Project Scope, Success Criteria, User Personas,
-Architecture Decisions, API Integration Strategy, Non-Functional Requirements, Risks & Mitigation,
-Definitions & Terminology, Out-of-Scope Clarifications, Approval & Sign-Off, Appendices
+Version change: 1.0.1 → 1.1.0
+List of modified principles: III (component list updated), IV (TV endpoints added), VII (new — Modular Architecture)
+Added sections: POC Completion Notice, updated architecture to reflect DynamicCarousel + carouselPool pattern, updated hook inventory, updated component list with Show components
 Removed sections: none
 Templates requiring updates: plan-template.md (✅ reviewed), spec-template.md (✅ reviewed), tasks-template.md (✅ reviewed)
-Follow-up TODOs: Replace placeholder names in Approval & Sign-Off when stakeholders are known
+Amendment rationale: POC fully implemented across 11 specs (001–011). Codebase modernized: 35 unused hooks removed, direct-fetch carousel architecture replaces hook-per-genre pattern.
 -->
-# CineScope - Movie Browsing Application - Constitution
+# CineScope - VOD Discovery Platform - Constitution
 
-**Document Version:** 1.0.1
-**Last Updated:** 2026-04-21
-**Status:** APPROVED
+**Document Version:** 1.1.0
+**Last Updated:** 2026-04-25
+**Status:** APPROVED — POC COMPLETE
+
+## 0. POC Completion Notice
+
+> **CineScope POC is fully implemented as of 2026-04-25.**
+> All 11 feature specs (001–011) are complete. The application is live at https://nishant-nagose.github.io/cinescope-vod-sdd/
+> Codebase cleanup completed: 35 obsolete hooks removed, carousels.ts removed, architecture consolidated to `carouselPool.ts` + `DynamicCarousel` + `useInfiniteMovies`/`useInfiniteShows`.
+
+---
 
 ## 1. Executive Summary
 
-**CineScope** is a medium-complexity frontend web application designed to provide users with a seamless movie browsing and discovery experience, similar to modern OTT platforms. The application integrates with external APIs (TMDB) to fetch real-time movie data and presents it through an intuitive user interface.
+**CineScope** is a frontend-only VOD discovery platform that provides a premium movie and TV show browsing experience, comparable to modern streaming platforms. The application integrates with the TMDB API to fetch real-time data and presents it through a polished, responsive interface with hero slider, infinite-scroll carousels, detailed media pages, and content filtering.
 
-**Focus:** Browsing and discovery experience only  
-**Scope Boundaries:** No streaming, authentication, payments, or backend development
+**Focus:** Browsing and discovery only — no streaming, no auth  
+**POC Status:** Complete — 11 specs implemented, deployed to GitHub Pages
 
 ## 2. Problem Statement
 
 Users need a single platform to:
-- Discover and browse trending movies
-- Access highly-rated content
-- Search for specific movies by title
-- View comprehensive movie details (synopsis, cast, ratings)
-- Get a seamless, responsive browsing experience
+- Discover and browse trending movies **and TV shows**
+- Access highly-rated content across both media types
+- Search for specific movies or shows by title
+- View comprehensive detail pages (synopsis, cast, ratings, episodes/seasons for shows)
+- Filter content by type (movies/shows), genre, region, and language
+- Get a seamless, responsive browsing experience comparable to commercial OTT platforms
 
 ## 3. Project Scope
 
 ### In Scope ✓
-- Modern VOD home page with:
-  - Top and Latest Movies (horizontal scrolling)
-  - Top 10 Movies Today (horizontal scrolling)
-  - Movie categories with dropdown filtering (Romantic, Thriller, Action, etc.)
-  - New on CineScope section (horizontal scrolling)
-  - Critically Acclaimed Movies (horizontal scrolling)
-  - 2-row horizontal scroll layout with 20 movies per section
-- Dedicated Trending Movies page
-- Dedicated Top Rated Movies page
-- Search functionality by movie title
-- Movie detail page with:
-  - Large poster/backdrop image
-  - Overview/synopsis
-  - Cast information
-  - Ratings and metadata
-  - Related/recommended movies
-- Premium responsive UI design (desktop, tablet, mobile)
-- Client-side caching and error handling
-- Horizontal scrolling components with responsive behavior
+- **Modern VOD home page** (dynamic, infinite-loading carousel pool):
+  - Hero slider (movies + shows, auto-advance, trailers, swipe, 70vh)
+  - 60+ dynamic carousels loaded progressively via IntersectionObserver
+  - Carousels grouped into tiers: New, Trending Top-10, Genre, Quality, Upcoming, Mood, Time-based, Language, Regional
+  - Content Type toggle (Movies / Shows / All) filters all carousels + hero slider
+  - Category filter, Country filter, Language filter integrated in header
+- **Dedicated Trending page** (movies + shows, infinite scroll, content type filter)
+- **Dedicated Top Rated page** (movies + shows, infinite scroll, content type filter)
+- **Unified search** (movies + shows together, Movie/Show type badges)
+- **Movie Detail page**: backdrop → auto-trailer (10s), Trailers & Clips section, Cast & Crew, Filmography, Watch Providers (OTT deep links), similar movies
+- **Show Detail page**: backdrop, season/episode accordion, Cast & Crew, similar shows, Watch Providers
+- **Country/Language/Region filtering** with regional and language-specific carousels
+- **OTT provider navigation** (direct app launch on mobile, web fallback)
+- Premium responsive UI (mobile-first, Tailwind, touch-swipe support)
+- Client-side TTL caching, error handling, and retry
 
 ### Out of Scope ✗
 - Video streaming functionality
@@ -74,6 +77,10 @@ TypeScript strict mode is enforced across all source files. No `any` types in pr
 
 ### III. Component-Driven Architecture
 UI is built from small, reusable components in `src/components/`. Pages in `src/pages/` compose components — they do not duplicate UI logic. Each component has a single, clear responsibility. State lives in custom hooks in `src/hooks/`, not in components.
+
+**Active components (post-cleanup):** HeroSlider, DynamicCarousel, MovieCarousel, ShowCarousel, MovieCard, ShowCard, RankedMovieCard, RankedShowCard, HoverPreviewCard, MovieGrid, ShowGrid, Layout, LazySection, ScrollToTop, InfiniteScrollTrigger, LoadingSkeleton, ErrorState, RatingBadge, ContentFilterBar, CategoryDropdown, RegionDropdown, SearchBar, LaunchScreen, CastSection, FilmographySection, TrailersSection, TrailerPlayer, WatchProvidersSection, EpisodeList.
+
+**Active hooks (15, post-cleanup):** `useApi`, `useInfiniteMovies`, `useInfiniteShows`, `useContentSearch`, `useMovieDetails`, `useShowDetails`, `useSeasonDetails`, `usePersonCredits`, `useMovieVideos`, `useShowVideos`, `useWatchProviders`, `useShowWatchProviders`, `useGenres`, `useCountries`, `useHeroSlider`.
 
 ### IV. API Contract First
 TMDB API endpoints and response shapes are defined in specs before implementation. The service layer (`src/services/tmdbApi.ts`) is the sole gateway to external data. No direct API calls from components or pages. Caching and error handling are centralised in the service layer.
@@ -133,19 +140,28 @@ All production releases go through GitHub Actions CI/CD (`.github/workflows/depl
 
 ### Technology Stack
 ```
-Frontend: React 18 + TypeScript + Vite
-State: React Context / TanStack Query (for API caching)
-Styling: Tailwind CSS + CSS Modules
-API: TMDB REST API
-Build: Vite
-Testing: Vitest + React Testing Library
+Frontend:  React 18 + TypeScript 5 + Vite 4
+State:     React Context (ContentFilterContext) + in-memory TTL cache
+Styling:   Tailwind CSS 3 (mobile-first, custom animations)
+API:       TMDB REST API (free tier, 40 req/10s)
+Build:     Vite (base: /cinescope-vod-sdd/)
+Testing:   Vitest + React Testing Library + jsdom
+Deploy:    GitHub Pages via GitHub Actions
 ```
 
-### Component Structure
-- **Pages**: Home (Modern VOD with carousels), TrendingMovies, TopRatedMovies, SearchResults, MovieDetails
-- **Components**: MovieCard, MovieGrid, MovieCarousel (horizontal), Header, SearchBar, DetailCard, CategoryFilter, SectionCarousel
-- **Hooks**: useMovie(), useMovieSearch(), useMovies(), useMoviesByGenre(), useCarousel()
-- **Services**: API service layer for TMDB integration with genre/category support
+### Carousel Architecture (Implemented)
+The home page uses a **pool-based dynamic carousel system** — there are no per-genre hooks. Instead:
+- `src/config/carouselPool.ts` — 60+ `DynamicCarouselConfig` objects, each with a `fetch` function that calls `discoverMovies`/`discoverTV` directly
+- `src/components/DynamicCarousel.tsx` — renders any config item using `useInfiniteMovies` or `useInfiniteShows`
+- `src/pages/HomePage.tsx` — selects from the pool based on content type, active category, and region; renders via `<LazySection>` + `<DynamicCarousel>`
+
+### Component Structure (Implemented)
+- **Pages**: HomePage, TrendingPage, TopRatedPage, SearchPage, MovieDetailPage, ShowDetailPage
+- **Components**: 29 components (see Principle III for full list)
+- **Hooks**: 15 active hooks — see Principle III; no per-genre hooks exist
+- **Services**: `tmdbApi.ts` (sole API gateway, 40+ functions), `cache.ts` (TTL cache), `errorHandling.ts`
+- **Config**: `carouselPool.ts` (carousel definitions + regional/language/genre builders), `ottProviders.ts`
+- **Utils**: `genreKeyMap.ts`, `carouselTitles.ts`, `ottNavigation.ts`
 
 ### Data Flow
 1. User interaction → Component state update
@@ -161,15 +177,31 @@ Testing: Vitest + React Testing Library
 - **Rate Limiting**: 40 requests/10 seconds (managed locally)
 - **Caching**: 5-minute cache for listing endpoints
 
-### Key Endpoints
-- `GET /movie/trending` - Trending/Latest movies for home page
-- `GET /movie/top_rated` - Top-rated movies for home page Top 10
-- `GET /discover/movie?with_genres=<id>` - Movies by genre/category
-- `GET /discover/movie?sort_by=release_date.desc` - New releases for "New on CineScope"
-- `GET /search/movie` - Search by title
-- `GET /movie/{id}` - Movie details
-- `GET /movie/{id}/credits` - Cast information
-- `GET /movie/{id}/similar` - Related/similar movies for recommendations
+### Key Endpoints (Movies)
+- `GET /trending/movie/day` — Daily trending movies (hero slider + Top 10)
+- `GET /trending/movie/week` — Weekly trending movies
+- `GET /movie/top_rated` — Top-rated movies page
+- `GET /discover/movie` — Flexible discover with sort, genre, date, region, language filters
+- `GET /search/multi` — Unified search (movies + shows)
+- `GET /movie/{id}` — Movie details + credits + similar (append_to_response)
+- `GET /movie/{id}/videos` — Trailers and clips
+- `GET /movie/{id}/watch/providers` — OTT platform availability
+- `GET /person/{id}/movie_credits` — Filmography for cast/crew
+
+### Key Endpoints (TV Shows)
+- `GET /trending/tv/day` — Daily trending shows
+- `GET /trending/tv/week` — Weekly trending shows
+- `GET /tv/top_rated` — Top-rated shows page
+- `GET /discover/tv` — Flexible TV discover (genre, region, language, dates)
+- `GET /tv/{id}` — Show details + credits + similar
+- `GET /tv/{id}/season/{n}` — Season details with episode list
+- `GET /tv/{id}/videos` — Show trailers
+- `GET /tv/{id}/watch/providers` — OTT platform availability
+
+### Key Endpoints (Metadata)
+- `GET /genre/movie/list` — Movie genre list (for CategoryDropdown)
+- `GET /configuration/countries` — Country list (for RegionDropdown)
+- `GET /configuration/languages` — Language list (unused, removed)
 
 ## 9. Non-Functional Requirements
 
@@ -303,7 +335,7 @@ Features MUST follow this sequence — no skipping steps:
 6. `/speckit-implement` → executes tasks
 7. `/speckit-analyze` → cross-artifact consistency check
 
-**Version**: 1.0.1 | **Ratified**: 2026-04-21 | **Last Amended**: 2026-04-22
+**Version**: 1.1.0 | **Ratified**: 2026-04-21 | **Last Amended**: 2026-04-25 — POC complete; architecture updated to reflect pool-based carousel system and 15-hook inventory
 
 ---
 
@@ -331,28 +363,42 @@ The project follows Specification-Driven Development (SDD) principles with organ
 - **src/**: Implementation files organized by components and pages
 - **.github/workflows/**: CI/CD configuration for automated deployment
 
-### C. Component Architecture (with Mobile Responsiveness & Horizontal Scrolling)
+### C. Component Architecture (Implemented — post-POC)
 ```
-App (React Router + basename: /cinescope-vod-sdd/)
-├── Layout (Responsive management)
-│   ├── Header (sticky, responsive h-14 sm:h-16, premium styling)
-│   │   ├── Logo (responsive h-6 sm:h-8)
-│   │   ├── Desktop Nav (hidden md:flex)
-│   │   ├── Mobile Menu (hamburger, md:hidden)
-│   │   └── Search Bar (hidden lg:block)
-│   ├── Main Content (dynamic routes)
-│   │   ├── HomePage (Modern VOD with carousels)
-│   │   │   ├── TopLatestCarousel (horizontal scroll, 2-row)
-│   │   │   ├── Top10TodayCarousel (horizontal scroll, 2-row)
-│   │   │   ├── CategoryFilter + CategoryCarousel
-│   │   │   ├── NewOnCineScopeCarousel (horizontal scroll, 2-row)
-│   │   │   └── CriticallyAcclaimedCarousel (horizontal scroll, 2-row)
-│   │   ├── TrendingPage (dedicated page, grid or carousel)
-│   │   ├── TopRatedPage (dedicated page, grid or carousel)
-│   │   ├── SearchResultsPage
-│   │   └── MovieDetailPage
-│   └── Footer (1 sm:2 lg:3 columns, responsive)
-└── Services (tmdbApi.ts - API layer with genre support)
+App (ContentFilterProvider → BrowserRouter → AppRoutes)
+├── LaunchScreen (full-screen intro, dismissed on completion)
+└── Layout (4-zone responsive header via CSS Grid)
+    ├── Header
+    │   ├── Zone 1: Logo (SVG, h-6 sm:h-8)
+    │   ├── Zone 2: SearchBar (desktop) / icon (mobile)
+    │   ├── Zone 3: ContentToggle (Movies | Shows | All)
+    │   └── Zone 4: Nav links + ContentFilterBar (Category, Country)
+    │   └── Mobile: hamburger overlay
+    ├── Pages (ScrollToTop + PageTransition on every route change)
+    │   ├── HomePage
+    │   │   ├── HeroSlider (movies+shows mixed, auto-advance, trailers, swipe)
+    │   │   └── [8–60+ DynamicCarousel via carouselPool + LazySection]
+    │   │       each = useInfiniteMovies|useInfiniteShows → MovieCarousel|ShowCarousel
+    │   ├── TrendingPage (MovieGrid + ShowGrid, infinite scroll, content-type gated)
+    │   ├── TopRatedPage (MovieGrid + ShowGrid, infinite scroll, content-type gated)
+    │   ├── SearchPage (useContentSearch → SearchResultCard grid, Movie/Show badges)
+    │   ├── MovieDetailPage
+    │   │   ├── Backdrop → TrailerPlayer (auto at 10s)
+    │   │   ├── TrailersSection (all clips)
+    │   │   ├── CastSection + FilmographySection
+    │   │   ├── WatchProvidersSection (OTT deep links)
+    │   │   └── MovieCarousel (similar movies)
+    │   └── ShowDetailPage
+    │       ├── Backdrop + metadata (seasons, networks, status)
+    │       ├── EpisodeList (season accordion, episode rows with synopsis)
+    │       ├── TrailersSection
+    │       ├── CastSection
+    │       ├── WatchProvidersSection
+    │       └── ShowCarousel (similar shows)
+    └── Services
+        ├── tmdbApi.ts (40+ functions — sole API gateway)
+        ├── cache.ts (in-memory TTL, 5 min)
+        └── errorHandling.ts (retry + timeout)
 ```
 
 ### D. Responsive Breakpoints Strategy

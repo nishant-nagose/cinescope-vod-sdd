@@ -396,7 +396,87 @@ These fixes were applied after Phase 16 in response to regression testing on rea
 **Phase 2 Tasks**: 35 tasks (T059–T093) — all complete
 **Phase 2 Success Criteria**: 12/12 met (SC-015 through SC-026)
 **Post-Phase-16 Patches**: Parts 9–11 — carousel cross-browser scroll, hero regional content, mobile zoom, trailer end-event, hero slider swipe
-**New Files Created**: `src/config/carousels.ts`, `src/config/ottProviders.ts`, `src/utils/ottNavigation.ts`
+**New Files Created**: `src/config/ottProviders.ts`, `src/utils/ottNavigation.ts`
 **Files Modified**: Layout.tsx, HeroSlider.tsx, TrailerPlayer.tsx, RegionDropdown.tsx, MovieCarousel.tsx, ShowCarousel.tsx, ShowCard.tsx, MovieDetailPage.tsx, ShowDetailPage.tsx, ContentFilterBar.tsx, WatchProvidersSection.tsx, useHeroSlider.ts, HomePage.tsx, tmdb.ts, tmdbApi.ts
 **Build**: `npm run build` — 89 modules, 78.64 kB gzipped, 0 errors
 **Tests**: All pass
+
+---
+
+## Phase 3: Codebase Cleanup & Modernization (2026-04-25)
+
+Post-POC cleanup applied to the entire `src/` tree to remove dead code and consolidate the architecture.
+
+### Files Deleted
+
+| File | Reason |
+|------|--------|
+| `src/config/carousels.ts` | Superseded by `carouselPool.ts`; hookKey-based approach no longer used |
+| `src/hooks/useActionAdventureMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useActionAdventureShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useAnimationMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useAnimationShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useAwardWinningMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useAwardWinningShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useComedyMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useComedyShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useCriticallyAcclaimed.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useCriticallyAcclaimedShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useDailyTrending.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useInspiringMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useInspiringShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useLanguages.ts` | Never used in production code |
+| `src/hooks/useMoviesByGenre.ts` | Never used in production code |
+| `src/hooks/useMovieSearch.ts` | Replaced by `useContentSearch.ts` |
+| `src/hooks/useNewReleases.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useNewShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useRealLifeMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useRealLifeShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useRecommendedShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useRomanceMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useRomanceShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useSciFiFantasyMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useSciFiFantasyShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useThrillerMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useThrillerShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useTopRatedMovies.ts` | Replaced by `useInfiniteMovies` + `getTopRatedMovies` directly |
+| `src/hooks/useTopRatedShows.ts` | Replaced by `useInfiniteShows` + `getTopRatedTV` directly |
+| `src/hooks/useTrendingMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useTVDailyTrending.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useTVWeeklyTrending.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useUpcomingMovies.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useUpcomingShows.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `src/hooks/useWeeklyTrending.ts` | Replaced by `carouselPool.ts` direct fetch |
+| `tailwind.config.cjs` | Duplicate of `tailwind.config.js` |
+| `sessionmd/session1.md` | Session artifact, not project code |
+
+### Active Hooks After Cleanup (15 total)
+
+| Hook | Used By |
+|------|---------|
+| `useApi` | useMovieVideos, useShowVideos, useWatchProviders, useShowWatchProviders, usePersonCredits, useGenres, useCountries |
+| `useInfiniteMovies` | DynamicCarousel, TrendingPage, TopRatedPage |
+| `useInfiniteShows` | DynamicCarousel, TrendingPage, TopRatedPage |
+| `useContentSearch` | SearchPage |
+| `useMovieDetails` | MovieDetailPage |
+| `useShowDetails` | ShowDetailPage |
+| `useSeasonDetails` | ShowDetailPage |
+| `usePersonCredits` | FilmographySection |
+| `useMovieVideos` | MovieDetailPage, TrailersSection |
+| `useShowVideos` | ShowDetailPage, TrailersSection |
+| `useWatchProviders` | WatchProvidersSection |
+| `useShowWatchProviders` | WatchProvidersSection |
+| `useGenres` | Layout |
+| `useCountries` | RegionDropdown |
+| `useHeroSlider` | HomePage |
+
+### Tests Updated
+
+- `tests/pages/HomePage.test.tsx` — rewritten to test `DynamicCarousel` + `carouselPool` architecture (no longer mocks 17 individual genre hooks)
+
+## Phase 3 Status: ✅ COMPLETE
+
+**Cleanup Date**: 2026-04-25
+**Hooks removed**: 35 (49 → 14 active, plus `useApi`)
+**Files removed**: 37
+**Application behavior**: Unchanged — no regressions
